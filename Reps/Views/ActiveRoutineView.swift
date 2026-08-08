@@ -48,9 +48,13 @@ struct ActiveRoutineView: View {
                 .padding(.bottom, 40)
                 .frame(maxWidth: .infinity, minHeight: geo.size.height, alignment: .top)
                 // Tapping empty area dismisses the keyboard so blur-commit fires.
-                // Interactive children keep their own taps; only gaps land here.
-                .contentShape(Rectangle())
-                .onTapGesture { dismissKeyboard() }
+                // The gesture lives on a background layer behind the content so
+                // interactive rows/fields keep their own taps; only gaps land here.
+                .background(
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture { dismissKeyboard() }
+                )
             }
         }
         .scrollDismissesKeyboard(.interactively)

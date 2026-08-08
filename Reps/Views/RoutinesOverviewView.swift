@@ -49,8 +49,13 @@ struct RoutinesOverviewView: View {
                 }
                 .padding(.horizontal, 24)
                 .frame(minHeight: proxy.size.height, alignment: .top)
-                .contentShape(Rectangle())
-                .onTapGesture { dismissKeyboard() }
+                .background(
+                    // Behind the rows so NavigationLinks stay tappable; only
+                    // taps on empty space fall through and dismiss the keyboard.
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture { dismissKeyboard() }
+                )
             }
         }
         .scrollDismissesKeyboard(.interactively)
