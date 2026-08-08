@@ -11,6 +11,7 @@ import SwiftData
 struct RootView: View {
     @Environment(\.modelContext) private var context
     @Environment(RestTimerController.self) private var timer
+    @Environment(\.scenePhase) private var scenePhase
 
     @Query(sort: \Routine.sortIndex) private var routines: [Routine]
     @State private var path: [Routine] = []
@@ -33,6 +34,9 @@ struct RootView: View {
         }
         .onChange(of: routines.map(\.name)) { _, names in
             SharedRoutines.publish(names)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { SharedRoutines.publish(routines.map(\.name)) }
         }
     }
 
