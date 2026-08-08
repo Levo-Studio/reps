@@ -2,16 +2,21 @@
 //  AddExerciseView.swift
 //  Reps
 //
-//  Screen 3 — add an exercise with inline ghost-text autocomplete.
+//  Inline ghost-text autocomplete for adding an exercise. Sits directly in the
+//  active-routine list where the "+ New Exercise" row was — no modal, no
+//  navigation chrome — so adding an exercise feels like adding a set.
 //
 
 import SwiftUI
 import SwiftData
 
-struct AddExerciseView: View {
+struct InlineAddExerciseRow: View {
     @Bindable var routine: Routine
     @Environment(\.modelContext) private var context
-    @Environment(\.dismiss) private var dismiss
+
+    /// Called when the user finishes adding (Cancel, or an empty submit) so the
+    /// parent can collapse back to the "+ New Exercise" row.
+    let onDone: () -> Void
 
     @State private var typed = ""
     @FocusState private var focused: Bool
@@ -35,24 +40,8 @@ struct AddExerciseView: View {
         return suggestion?.type ?? ExerciseCatalog.type(for: trimmed)
     }
 
-    private var canCreate: Bool {
-        !typed.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            navBar
-                .padding(.top, 12)
-                .padding(.bottom, 28)
-
-            if let last = routine.orderedExercises.last {
-                Text(last.name)
-                    .font(.system(size: 17, weight: .regular))
-                    .foregroundStyle(Theme.secondary)
-                    .padding(.vertical, 16)
-                Divider().overlay(Theme.divider)
-            }
-
             inputField
                 .padding(.top, 20)
 
@@ -71,32 +60,12 @@ struct AddExerciseView: View {
 
             Divider().overlay(Theme.divider)
 
-            Spacer()
-
-            Button("Cancel") { dismiss() }
+            Button("Cancel") { onDone() }
                 .font(.system(size: 17))
                 .foregroundStyle(Theme.secondary)
-                .padding(.bottom, 12)
+                .padding(.vertical, 12)
         }
-        .padding(.horizontal, 24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Theme.background)
         .onAppear { focused = true }
-    }
-
-    private var navBar: some View {
-        HStack {
-            Text(routine.name)
-                .font(.system(size: 28, weight: .bold))
-                .foregroundStyle(Theme.primary)
-            Spacer()
-            Button(action: create) {
-                Image(systemName: "checkmark")
-                    .font(.system(size: 18, weight: .regular))
-                    .foregroundStyle(canCreate ? Theme.primary : Theme.secondary)
-            }
-            .disabled(!canCreate)
-        }
     }
 
     private var inputField: some View {
@@ -119,16 +88,20 @@ struct AddExerciseView: View {
     // MARK: - Actions
 
     /// First return accepts the ghost suggestion; a second return (nothing left
-    /// to accept) creates the exercise.
+    /// to accept) creates the exercise. An empty submit collapses the row.
     private func handleReturn() {
         if !ghostSuffix.isEmpty, let suggestion {
             typed = suggestion.name
             focused = true
+        } else if typed.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            onDone()
         } else {
             create()
         }
     }
 
+    /// Appends the exercise, then clears the field and keeps focus so the user
+    /// can add another in a row.
     private func create() {
         let name = typed.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { return }
@@ -137,6 +110,7 @@ struct AddExerciseView: View {
         exercise.routine = routine
         routine.exercises.append(exercise)
         try? context.save()
-        dismiss()
+        typed = ""
+        focused = true
     }
 }

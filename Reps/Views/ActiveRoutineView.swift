@@ -15,24 +15,37 @@ struct ActiveRoutineView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
 
-    @State private var showAddExercise = false
-    @State private var showRestView = false
+    @State private var isAddingExercise = false
     @State private var showEndFlow = false
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(routine.orderedExercises) { exercise in
-                    ExerciseSectionView(exercise: exercise, routineName: routine.name)
-                }
-
-                newExerciseRow
-                    .padding(.top, 8)
+        VStack(spacing: 0) {
+            // Rest timer lives as a pinned bar above the list — the exercise
+            // list stays stationary while the bar animates in and out.
+            if timer.isRunning {
+                RestingHeaderView()
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 40)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(routine.orderedExercises) { exercise in
+                        ExerciseSectionView(exercise: exercise, routineName: routine.name)
+                    }
+
+                    if isAddingExercise {
+                        InlineAddExerciseRow(routine: routine, onDone: { isAddingExercise = false })
+                    } else {
+                        newExerciseRow
+                            .padding(.top, 8)
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 40)
+            }
+            .scrollDismissesKeyboard(.interactively)
         }
-        .scrollDismissesKeyboard(.interactively)
+        .animation(.easeInOut, value: timer.isRunning)
         .background(Theme.background)
         .navigationTitle(routine.name)
         .navigationBarTitleDisplayMode(.large)
@@ -50,18 +63,8 @@ struct ActiveRoutineView: View {
                 .accessibilityLabel("End workout")
             }
         }
-        .fullScreenCover(isPresented: $showAddExercise) {
-            AddExerciseView(routine: routine)
-        }
-        .fullScreenCover(isPresented: $showRestView) {
-            RestTimerView(routine: routine)
-        }
         .fullScreenCover(isPresented: $showEndFlow) {
             EndWorkoutFlowView(routine: routine, onFinish: finishWorkout)
-        }
-        .onChange(of: timer.isRunning) { _, running in
-            if running { showRestView = true }
-            else { showRestView = false }
         }
     }
 
@@ -74,7 +77,7 @@ struct ActiveRoutineView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 16)
                 .contentShape(Rectangle())
-                .onTapGesture { showAddExercise = true }
+                .onTapGesture { isAddingExercise = true }
         }
     }
 
