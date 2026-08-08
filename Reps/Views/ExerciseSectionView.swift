@@ -52,7 +52,11 @@ struct ExerciseSectionView: View {
     /// wins, otherwise the suggestion's type, otherwise the catalog resolution.
     private var effectiveType: ExerciseType {
         let trimmed = draftName.trimmingCharacters(in: .whitespaces)
-        return manualType ?? suggestion?.type ?? ExerciseCatalog.type(for: trimmed, extra: learnedEntries)
+        // The suggestion's type is deliberately NOT peeked here: while typing a
+        // prefix the badge stays on the exact-match type (custom → weight+reps),
+        // and the suggestion's type only takes effect once it's accepted. A
+        // manual tap on the badge overrides live.
+        return manualType ?? ExerciseCatalog.type(for: trimmed, extra: learnedEntries)
     }
 
     /// Whether there is a drafted name to show a badge for.
