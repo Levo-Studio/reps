@@ -41,9 +41,9 @@ struct ExerciseSectionView: View {
                     },
                     onToggleDone: {
                         // Marking a set done starts the rest for the next set;
-                        // un-marking it stops the running rest.
+                        // un-marking it stops the running rest. `isDone` is
+                        // in-memory only, so there's nothing to persist here.
                         set.isDone.toggle()
-                        try? context.save()
                         if set.isDone {
                             timer.start(
                                 routineName: routineName,

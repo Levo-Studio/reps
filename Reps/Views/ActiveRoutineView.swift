@@ -109,9 +109,13 @@ struct ActiveRoutineView: View {
     }
 
     /// Ends the workout and returns to Screen 1. Logged sets stay saved to the
-    /// routine — they are not cleared.
+    /// routine, but their completion is cleared so the routine is always entered
+    /// with zero completion next time.
     private func finishWorkout() {
         timer.stop()
+        for exercise in routine.exercises {
+            for set in exercise.sets { set.isDone = false }
+        }
         showEndFlow = false
         dismiss()
     }
