@@ -24,7 +24,6 @@ struct RootView: View {
                 }
         }
         .task {
-            Seeder.seedIfNeeded(context)
             timer.requestAuthorization()
             openPendingRoutine()
         }
