@@ -21,6 +21,9 @@ struct InlineAddExerciseRow: View {
     @State private var typed = ""
     @FocusState private var focused: Bool
 
+    /// Guards against the return path and the blur path both firing.
+    @State private var finished = false
+
     /// The catalog entry whose name begins with what's typed, if any.
     private var suggestion: CatalogEntry? {
         ExerciseCatalog.firstMatch(for: typed)
@@ -77,6 +80,9 @@ struct InlineAddExerciseRow: View {
                 .focused($focused)
                 .submitLabel(.next)
                 .onSubmit(handleReturn)
+                .onChange(of: focused) { _, isFocused in
+                    if !isFocused { finishFromBlur() }
+                }
                 .fixedSize()
             Text(ghostSuffix)
                 .font(.system(size: 28, weight: .regular))
@@ -100,9 +106,11 @@ struct InlineAddExerciseRow: View {
         }
     }
 
-    /// Appends the exercise, then clears the field and keeps focus so the user
-    /// can add another in a row.
+    /// Appends the exercise, then collapses the row back to the "+ New Exercise"
+    /// button via `onDone()`.
     private func create() {
+        guard !finished else { return }
+        finished = true
         let name = typed.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { return }
         let type = suggestion?.type ?? ExerciseCatalog.type(for: name)
@@ -110,7 +118,18 @@ struct InlineAddExerciseRow: View {
         exercise.routine = routine
         routine.exercises.append(exercise)
         try? context.save()
-        typed = ""
-        focused = true
+        onDone()
+    }
+
+    /// Tapping outside the field commits a non-empty entry (which collapses via
+    /// `create()`), or otherwise just collapses back to the "+ New Exercise" row.
+    private func finishFromBlur() {
+        guard !finished else { return }
+        if typed.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            finished = true
+            onDone()
+        } else {
+            create()
+        }
     }
 }

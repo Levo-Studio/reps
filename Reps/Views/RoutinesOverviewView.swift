@@ -74,6 +74,9 @@ struct RoutinesOverviewView: View {
                 .focused($addFieldFocused)
                 .submitLabel(.done)
                 .onSubmit { commitNewRoutine() }
+                .onChange(of: addFieldFocused) { _, focused in
+                    if !focused { commitNewRoutine() }
+                }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 16)
             Divider().overlay(Theme.divider)
@@ -87,8 +90,10 @@ struct RoutinesOverviewView: View {
     }
 
     private func commitNewRoutine() {
+        guard isAddingRoutine else { return }
         let name = newRoutineName.trimmingCharacters(in: .whitespacesAndNewlines)
         isAddingRoutine = false
+        newRoutineName = ""
         guard !name.isEmpty else { return }
         let routine = Routine(name: name, sortIndex: (routines.map(\.sortIndex).max() ?? -1) + 1)
         context.insert(routine)
