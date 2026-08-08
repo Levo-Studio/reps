@@ -14,6 +14,7 @@ struct ExerciseSectionView: View {
     @Environment(RestTimerController.self) private var timer
     @Environment(CompletionStore.self) private var completion
     @Environment(\.modelContext) private var context
+    @Query private var savedExercises: [SavedExercise]
     let routineName: String
 
     @FocusState private var nameFocused: Bool
@@ -22,13 +23,22 @@ struct ExerciseSectionView: View {
     /// Working copy of the name while editing, so an empty submit can be
     /// discarded without ever writing a blank name onto the model.
     @State private var draftName = ""
+    /// A manual type override chosen by tapping the badge. `nil` means the type
+    /// is auto-resolved from the suggestion/catalog.
+    @State private var manualType: ExerciseType?
 
     private var sets: [SetEntry] { exercise.orderedSets }
+
+    /// User-learned exercises, mapped into catalog entries so they feed both the
+    /// ghost-text suggestions and type auto-detection.
+    private var learnedEntries: [CatalogEntry] {
+        savedExercises.map { CatalogEntry(name: $0.name, type: $0.type) }
+    }
 
     /// The catalog entry whose name begins with the drafted name, if any —
     /// powers the inline ghost-text completion while renaming.
     private var suggestion: CatalogEntry? {
-        ExerciseCatalog.firstMatch(for: draftName)
+        ExerciseCatalog.firstMatch(for: draftName, extra: learnedEntries)
     }
 
     /// The un-typed remainder of the suggestion, shown as dimmed ghost text.
@@ -38,11 +48,16 @@ struct ExerciseSectionView: View {
         return String(suggestion.name.dropFirst(draftName.count))
     }
 
-    /// The type badge reflects what the rename would resolve to right now.
-    private var resolvedType: ExerciseType? {
+    /// The type the rename would resolve to right now: a manual badge override
+    /// wins, otherwise the suggestion's type, otherwise the catalog resolution.
+    private var effectiveType: ExerciseType {
         let trimmed = draftName.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return nil }
-        return suggestion?.type ?? ExerciseCatalog.type(for: trimmed)
+        return manualType ?? suggestion?.type ?? ExerciseCatalog.type(for: trimmed, extra: learnedEntries)
+    }
+
+    /// Whether there is a drafted name to show a badge for.
+    private var hasName: Bool {
+        !draftName.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     var body: some View {
@@ -107,9 +122,14 @@ struct ExerciseSectionView: View {
                         Text("Double-tap return to accept")
                             .foregroundStyle(Theme.secondary)
                         Spacer()
-                        if let resolvedType {
-                            Text(resolvedType.badge)
-                                .foregroundStyle(Theme.accent)
+                        if hasName {
+                            Button {
+                                manualType = (effectiveType == .weightAndReps) ? .repsOnly : .weightAndReps
+                            } label: {
+                                Text(effectiveType.badge)
+                                    .foregroundStyle(Theme.accent)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                     .font(.system(size: 12, design: .monospaced))
@@ -181,6 +201,7 @@ struct ExerciseSectionView: View {
 
     private func beginNameEdit() {
         draftName = exercise.name
+        manualType = nil
         isEditingName = true
     }
 
@@ -189,6 +210,9 @@ struct ExerciseSectionView: View {
     private func handleReturn() {
         if !ghostSuffix.isEmpty, let suggestion {
             draftName = suggestion.name
+            // Accepting a suggestion hands type authority back to that
+            // suggestion, discarding any manual badge override.
+            manualType = nil
             nameFocused = true
         } else {
             commitNameEdit()
@@ -205,12 +229,27 @@ struct ExerciseSectionView: View {
         guard isEditingName else { return }
         let trimmed = draftName.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty {
+            let type = effectiveType
             exercise.name = trimmed
-            exercise.type = suggestion?.type ?? ExerciseCatalog.type(for: trimmed)
+            exercise.type = type
+            learn(name: trimmed, type: type)
             try? context.save()
         }
+        manualType = nil
         isEditingName = false
         nameFocused = false
+    }
+
+    /// Persists a custom (non-built-in) exercise name and its chosen type so it
+    /// feeds suggestions next time. Upserts by case-insensitive name to respect
+    /// the `@Attribute(.unique)` constraint on `SavedExercise.name`.
+    private func learn(name: String, type: ExerciseType) {
+        guard !ExerciseCatalog.isBuiltIn(name) else { return }
+        if let existing = savedExercises.first(where: { $0.name.lowercased() == name.lowercased() }) {
+            existing.type = type
+        } else {
+            context.insert(SavedExercise(name: name, type: type))
+        }
     }
 
     private func deleteExercise() {

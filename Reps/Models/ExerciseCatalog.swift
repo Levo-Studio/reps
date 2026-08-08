@@ -45,17 +45,25 @@ enum ExerciseCatalog {
     ]
 
     /// Returns the first catalog entry whose name begins with `prefix`
-    /// (case-insensitive), used for the inline ghost-text completion.
-    static func firstMatch(for prefix: String) -> CatalogEntry? {
+    /// (case-insensitive). `extra` holds user-learned exercises, searched after
+    /// the built-in list.
+    static func firstMatch(for prefix: String, extra: [CatalogEntry] = []) -> CatalogEntry? {
         let trimmed = prefix.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return nil }
-        return all.first { $0.name.lowercased().hasPrefix(trimmed.lowercased()) }
+        let lower = trimmed.lowercased()
+        return (all + extra).first { $0.name.lowercased().hasPrefix(lower) }
     }
 
-    /// Resolves the type for a finished name — matched entries keep their
-    /// predefined type, fully custom names default to `.weightAndReps`.
-    static func type(for name: String) -> ExerciseType {
+    /// Resolves the type for a finished name — matched entries (built-in or
+    /// learned) keep their type, fully custom names default to `.weightAndReps`.
+    static func type(for name: String, extra: [CatalogEntry] = []) -> ExerciseType {
         let trimmed = name.trimmingCharacters(in: .whitespaces).lowercased()
-        return all.first { $0.name.lowercased() == trimmed }?.type ?? .weightAndReps
+        return (all + extra).first { $0.name.lowercased() == trimmed }?.type ?? .weightAndReps
+    }
+
+    /// Whether a name is part of the built-in list (so it need not be learned).
+    static func isBuiltIn(_ name: String) -> Bool {
+        let trimmed = name.trimmingCharacters(in: .whitespaces).lowercased()
+        return all.contains { $0.name.lowercased() == trimmed }
     }
 }

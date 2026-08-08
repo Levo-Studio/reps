@@ -13,6 +13,7 @@ import SwiftData
 struct InlineAddExerciseRow: View {
     @Bindable var routine: Routine
     @Environment(\.modelContext) private var context
+    @Query private var savedExercises: [SavedExercise]
 
     /// Called when the user finishes adding (Cancel, or an empty submit) so the
     /// parent can collapse back to the "+ New Exercise" row.
@@ -24,9 +25,19 @@ struct InlineAddExerciseRow: View {
     /// Guards against the return path and the blur path both firing.
     @State private var finished = false
 
+    /// A manual type override chosen by tapping the badge. `nil` means the type
+    /// is auto-resolved from the suggestion/catalog.
+    @State private var manualType: ExerciseType?
+
+    /// User-learned exercises, mapped into catalog entries so they feed both the
+    /// ghost-text suggestions and type auto-detection.
+    private var learnedEntries: [CatalogEntry] {
+        savedExercises.map { CatalogEntry(name: $0.name, type: $0.type) }
+    }
+
     /// The catalog entry whose name begins with what's typed, if any.
     private var suggestion: CatalogEntry? {
-        ExerciseCatalog.firstMatch(for: typed)
+        ExerciseCatalog.firstMatch(for: typed, extra: learnedEntries)
     }
 
     /// The un-typed remainder of the suggestion, shown as dimmed ghost text.
@@ -36,11 +47,16 @@ struct InlineAddExerciseRow: View {
         return String(suggestion.name.dropFirst(typed.count))
     }
 
-    /// The type badge reflects what would be created right now.
-    private var resolvedType: ExerciseType? {
+    /// The type that would be created right now: a manual badge override wins,
+    /// otherwise the suggestion's type, otherwise the catalog resolution.
+    private var effectiveType: ExerciseType {
         let trimmed = typed.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return nil }
-        return suggestion?.type ?? ExerciseCatalog.type(for: trimmed)
+        return manualType ?? suggestion?.type ?? ExerciseCatalog.type(for: trimmed, extra: learnedEntries)
+    }
+
+    /// Whether there is a name to show a badge for.
+    private var hasName: Bool {
+        !typed.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     var body: some View {
@@ -52,9 +68,14 @@ struct InlineAddExerciseRow: View {
                 Text("Double-tap return to accept")
                     .foregroundStyle(Theme.secondary)
                 Spacer()
-                if let resolvedType {
-                    Text(resolvedType.badge)
-                        .foregroundStyle(Theme.accent)
+                if hasName {
+                    Button {
+                        manualType = (effectiveType == .weightAndReps) ? .repsOnly : .weightAndReps
+                    } label: {
+                        Text(effectiveType.badge)
+                            .foregroundStyle(Theme.accent)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .font(.system(size: 13, design: .monospaced))
@@ -98,8 +119,12 @@ struct InlineAddExerciseRow: View {
     private func handleReturn() {
         if !ghostSuffix.isEmpty, let suggestion {
             typed = suggestion.name
+            // Accepting a suggestion hands type authority back to that
+            // suggestion, discarding any manual badge override.
+            manualType = nil
             focused = true
         } else if typed.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            manualType = nil
             onDone()
         } else {
             create()
@@ -113,12 +138,26 @@ struct InlineAddExerciseRow: View {
         finished = true
         let name = typed.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { return }
-        let type = suggestion?.type ?? ExerciseCatalog.type(for: name)
+        let type = effectiveType
         let exercise = Exercise(name: name, type: type, sortIndex: routine.nextExerciseSortIndex)
         exercise.routine = routine
         routine.exercises.append(exercise)
+        learn(name: name, type: type)
         try? context.save()
+        manualType = nil
         onDone()
+    }
+
+    /// Persists a custom (non-built-in) exercise name and its chosen type so it
+    /// feeds suggestions next time. Upserts by case-insensitive name to respect
+    /// the `@Attribute(.unique)` constraint on `SavedExercise.name`.
+    private func learn(name: String, type: ExerciseType) {
+        guard !ExerciseCatalog.isBuiltIn(name) else { return }
+        if let existing = savedExercises.first(where: { $0.name.lowercased() == name.lowercased() }) {
+            existing.type = type
+        } else {
+            context.insert(SavedExercise(name: name, type: type))
+        }
     }
 
     /// Tapping outside the field commits a non-empty entry (which collapses via
