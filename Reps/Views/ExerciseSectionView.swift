@@ -16,8 +16,6 @@ struct ExerciseSectionView: View {
     @Environment(\.modelContext) private var context
     let routineName: String
 
-    @State private var isEditingName = false
-    @State private var isAddingSet = false
     @FocusState private var nameFocused: Bool
 
     private var sets: [LoggedSet] { session.sets(for: exercise.id) }
@@ -34,6 +32,8 @@ struct ExerciseSectionView: View {
                     weight: set.weight,
                     reps: set.reps,
                     onEdit: { weight, reps in
+                        // Editing an existing set saves live — it never starts
+                        // the rest timer (only adding a new set does).
                         session.update(set, weight: weight, reps: reps)
                         exercise.recordIfBest(weight: weight, reps: reps)
                         try? context.save()
@@ -42,60 +42,30 @@ struct ExerciseSectionView: View {
                 rowDivider
             }
 
-            if isAddingSet {
-                SetInputRow(
-                    type: exercise.type,
-                    leading: "\(sets.count + 1)",
-                    initialWeight: exercise.bestWeight,
-                    initialReps: exercise.bestReps,
-                    onCommit: { weight, reps in
-                        addSet(weight: weight, reps: reps)
-                        isAddingSet = false
-                    },
-                    onCancel: { isAddingSet = false }
-                )
-                rowDivider
-            } else {
-                addSetRow
-            }
+            addSetRow
         }
     }
 
     // MARK: - Header
 
-    @ViewBuilder
+    /// The exercise name is an always-editable field — a single tap focuses it,
+    /// and it saves when it loses focus (like editing a Notes title).
     private var header: some View {
-        if isEditingName {
-            TextField("", text: $exercise.name)
-                .font(.system(size: 17, weight: .bold))
-                .foregroundStyle(Theme.primary)
-                .tint(Theme.accent)
-                .focused($nameFocused)
-                .submitLabel(.done)
-                .onSubmit { commitNameEdit() }
-                .padding(.top, 20)
-                .padding(.bottom, 8)
-        } else {
-            Text(exercise.name)
-                .font(.system(size: 17, weight: .bold))
-                .foregroundStyle(Theme.primary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 20)
-                .padding(.bottom, 8)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    isEditingName = true
-                    nameFocused = true
-                }
-                .contextMenu {
-                    Button(role: .destructive) { deleteExercise() } label: { Text("Delete") }
-                }
-        }
-    }
-
-    private func deleteExercise() {
-        context.delete(exercise)
-        try? context.save()
+        TextField("", text: $exercise.name)
+            .font(.system(size: 17, weight: .bold))
+            .foregroundStyle(Theme.primary)
+            .tint(Theme.accent)
+            .focused($nameFocused)
+            .submitLabel(.done)
+            .onSubmit { commitNameEdit() }
+            .onChange(of: nameFocused) { _, focused in
+                if !focused { commitNameEdit() }
+            }
+            .padding(.top, 20)
+            .padding(.bottom, 8)
+            .contextMenu {
+                Button(role: .destructive) { deleteExercise() } label: { Text("Delete") }
+            }
     }
 
     private var addSetRow: some View {
@@ -108,7 +78,7 @@ struct ExerciseSectionView: View {
         .foregroundStyle(Theme.secondary)
         .padding(.vertical, 12)
         .contentShape(Rectangle())
-        .onTapGesture { isAddingSet = true }
+        .onTapGesture { addSet() }
     }
 
     private var rowDivider: some View {
@@ -121,14 +91,25 @@ struct ExerciseSectionView: View {
         let trimmed = exercise.name.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty { exercise.name = trimmed }
         try? context.save()
-        isEditingName = false
     }
 
-    private func addSet(weight: Double?, reps: Int) {
+    private func deleteExercise() {
+        context.delete(exercise)
+        try? context.save()
+    }
+
+    /// Appends a new set — this deliberate tap is what starts the rest timer.
+    /// The set is pre-filled from the previous set (or the exercise's baseline)
+    /// and is then freely editable inline.
+    private func addSet() {
+        let last = sets.last
+        let weight = exercise.type == .weightAndReps ? (last?.weight ?? exercise.bestWeight) : nil
+        let reps = last?.reps ?? (exercise.bestReps > 0 ? exercise.bestReps : 10)
+
         session.addSet(exerciseId: exercise.id, weight: weight, reps: reps)
         exercise.recordIfBest(weight: weight, reps: reps)
         try? context.save()
-        // Logging a set automatically starts the rest timer.
+
         timer.start(
             routineName: routineName,
             nextExercise: exercise.name,
