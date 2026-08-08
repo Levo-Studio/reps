@@ -14,8 +14,15 @@ enum PhotoSaver {
     /// Renders `card` and adds it to the photo library.
     @MainActor
     static func save(_ card: SummaryCardView) async throws {
-        let renderer = ImageRenderer(content: card)
+        // Back the card with a solid square so the exported PNG is a clean,
+        // full-bleed square. If a rounded-corner variant ever slips through,
+        // the opaque surface fills what would otherwise be transparent corners.
+        let content = card
+            .frame(width: 358, height: 358)
+            .background(Theme.surface)
+        let renderer = ImageRenderer(content: content)
         renderer.scale = 3
+        renderer.isOpaque = true
         guard let image = renderer.uiImage else { throw SaveError.renderFailed }
         try await addToLibrary(image)
     }

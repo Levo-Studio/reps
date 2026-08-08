@@ -38,6 +38,20 @@ struct EndWorkoutFlowView: View {
         )
     }
 
+    /// Same card as on-screen but with square corners for a clean, full-bleed
+    /// export. Passed to `PhotoSaver.save` so the saved image has no rounded corners.
+    private var exportCard: SummaryCardView {
+        SummaryCardView(
+            routineName: routine.name,
+            date: date,
+            totalVolume: session.totalVolume,
+            totalSets: session.totalSets,
+            totalReps: session.totalReps,
+            exerciseCount: loggedExercises.count,
+            cornerRadius: 0
+        )
+    }
+
     var body: some View {
         ZStack {
             Theme.background.ignoresSafeArea()
@@ -181,7 +195,7 @@ struct EndWorkoutFlowView: View {
         isSaving = true
         defer { isSaving = false }
         do {
-            try await PhotoSaver.save(card)
+            try await PhotoSaver.save(exportCard)
             phase = .saved
         } catch {
             // Permission denied or render failure — stay on the preview screen.

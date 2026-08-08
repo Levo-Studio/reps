@@ -15,6 +15,7 @@ struct SummaryCardView: View {
     let totalSets: Int
     let totalReps: Int
     let exerciseCount: Int
+    var cornerRadius: CGFloat = 20
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -68,7 +69,7 @@ struct SummaryCardView: View {
         }
         .padding(28)
         .frame(width: 358, height: 358, alignment: .topLeading)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 20))
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: cornerRadius))
     }
 
     private func stat(value: String, caption: String) -> some View {
