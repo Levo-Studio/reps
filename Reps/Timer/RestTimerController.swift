@@ -120,12 +120,13 @@ final class RestTimerController {
     private func scheduleNotification(at date: Date) {
         cancelNotification()
         let content = UNMutableNotificationContent()
-        content.title = "Reps"
-        content.body = "Rest over"
+        // No title/body: we only want a short sound when rest is over, not a
+        // "Rest over" text banner. The foreground delegate suppresses the banner
+        // entirely and plays sound only.
         // A short, subtle custom sound. Add `RestComplete.caf` to the app
         // bundle to use it; iOS falls back to the default tone if absent.
         content.sound = UNNotificationSound(named: UNNotificationSoundName("RestComplete.caf"))
-        content.interruptionLevel = .timeSensitive
+        content.interruptionLevel = .passive
 
         let interval = max(1, date.timeIntervalSinceNow)
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
@@ -151,7 +152,9 @@ final class RestTimerController {
         do {
             activity = try Activity.request(
                 attributes: attributes,
-                content: .init(state: state, staleDate: endDate)
+                // No stale date: otherwise iOS marks the activity stale at the
+                // end and shows a spinning "stale" indicator over the timer.
+                content: .init(state: state, staleDate: nil)
             )
         } catch {
             // No widget extension registered yet, or the user disabled Live

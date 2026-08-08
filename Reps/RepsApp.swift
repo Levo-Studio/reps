@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import UserNotifications
 
 @main
 struct RepsApp: App {
@@ -14,6 +15,10 @@ struct RepsApp: App {
     @State private var timer = RestTimerController()
     /// In-memory set completion for the current run.
     @State private var completion = CompletionStore()
+
+    init() {
+        UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
+    }
 
     var body: some Scene {
         WindowGroup {

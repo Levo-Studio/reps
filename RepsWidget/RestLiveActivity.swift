@@ -94,14 +94,16 @@ struct RestLiveActivity: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "moon.fill")
-                            .font(.system(size: 12, weight: .semibold))
+                    if context.state.endDate <= Date() {
+                        Text("Rest over")
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(RepsTheme.accent)
+                    } else {
                         CountdownText(
                             endDate: context.state.endDate,
                             font: .system(size: 22, weight: .semibold, design: .rounded)
                         )
+                        .frame(maxWidth: 64, alignment: .trailing)
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
@@ -165,12 +167,13 @@ private struct LockScreenView: View {
                     .foregroundStyle(RepsTheme.secondary)
             }
 
-            // Second line: routine + next set (leading) · countdown (trailing)
+            // Second line: routine/"Rest over" + next set (leading) · countdown
+            // pinned hard right (trailing).
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(context.attributes.routineName)
+                    Text(isOver ? "Rest over" : context.attributes.routineName)
                         .font(.system(size: 17, weight: .bold))
-                        .foregroundStyle(RepsTheme.primary)
+                        .foregroundStyle(isOver ? RepsTheme.accent : RepsTheme.primary)
                         .lineLimit(1)
                     Text("Next: \(context.attributes.nextExercise) • Set \(context.attributes.nextSetNumber)")
                         .font(.system(size: 13, weight: .regular))
@@ -180,13 +183,17 @@ private struct LockScreenView: View {
 
                 Spacer(minLength: 8)
 
-                HStack(spacing: 8) {
-                    Image(systemName: "moon.fill")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(RepsTheme.accent)
-                    CountdownText(endDate: context.state.endDate)
+                if !isOver {
+                    CountdownText(
+                        endDate: context.state.endDate,
+                        font: .system(size: 30, weight: .semibold, design: .rounded)
+                    )
+                    .frame(width: 78, alignment: .trailing)
                 }
             }
         }
     }
+
+    /// Whether the rest has elapsed — the view re-renders around the end date.
+    private var isOver: Bool { context.state.endDate <= Date() }
 }
