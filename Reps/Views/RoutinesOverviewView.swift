@@ -18,35 +18,40 @@ struct RoutinesOverviewView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Reps")
-                    .font(.system(size: 34, weight: .bold))
-                    .foregroundStyle(Theme.primary)
-                    .padding(.top, 12)
-                    .padding(.bottom, 28)
+            GeometryReader { proxy in
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Reps")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundStyle(Theme.primary)
+                        .padding(.top, 12)
+                        .padding(.bottom, 28)
 
-                ForEach(routines) { routine in
-                    NavigationLink(value: routine) {
-                        routineRow(routine.name, color: Theme.primary)
+                    ForEach(routines) { routine in
+                        NavigationLink(value: routine) {
+                            routineRow(routine.name, color: Theme.primary)
+                        }
+                        .buttonStyle(.plain)
+                        .contextMenu {
+                            Button(role: .destructive) { delete(routine) } label: { Text("Delete") }
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .contextMenu {
-                        Button(role: .destructive) { delete(routine) } label: { Text("Delete") }
+
+                    if isAddingRoutine {
+                        addRoutineField
+                    } else {
+                        Button {
+                            beginAddingRoutine()
+                        } label: {
+                            routineRow("+ New Routine", color: Theme.secondary)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
-
-                if isAddingRoutine {
-                    addRoutineField
-                } else {
-                    Button {
-                        beginAddingRoutine()
-                    } label: {
-                        routineRow("+ New Routine", color: Theme.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
+                .padding(.horizontal, 24)
+                .frame(minHeight: proxy.size.height, alignment: .top)
+                .contentShape(Rectangle())
+                .onTapGesture { dismissKeyboard() }
             }
-            .padding(.horizontal, 24)
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Theme.background)
@@ -103,5 +108,9 @@ struct RoutinesOverviewView: View {
     private func delete(_ routine: Routine) {
         context.delete(routine)
         try? context.save()
+    }
+
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
