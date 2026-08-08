@@ -10,7 +10,6 @@ import SwiftData
 
 struct ActiveRoutineView: View {
     @Bindable var routine: Routine
-    @Environment(WorkoutSession.self) private var session
     @Environment(RestTimerController.self) private var timer
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -109,10 +108,10 @@ struct ActiveRoutineView: View {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
-    /// Ends the workout: clears the session and returns to Screen 1.
+    /// Ends the workout and returns to Screen 1. Logged sets stay saved to the
+    /// routine — they are not cleared.
     private func finishWorkout() {
         timer.stop()
-        session.reset()
         showEndFlow = false
         dismiss()
     }

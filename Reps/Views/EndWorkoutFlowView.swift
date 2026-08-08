@@ -14,7 +14,6 @@ struct EndWorkoutFlowView: View {
     /// Ends the session and returns to Screen 1.
     let onFinish: () -> Void
 
-    @Environment(WorkoutSession.self) private var session
     @Environment(\.dismiss) private var dismiss
 
     private enum Phase { case review, preview, saved }
@@ -22,18 +21,30 @@ struct EndWorkoutFlowView: View {
     @State private var isSaving = false
     private let date = Date()
 
-    /// Exercises that actually have a set logged this session.
+    /// Exercises that actually have a logged set.
     private var loggedExercises: [Exercise] {
-        routine.orderedExercises.filter { !session.sets(for: $0.id).isEmpty }
+        routine.orderedExercises.filter { !$0.sets.isEmpty }
     }
+
+    private var allSets: [SetEntry] {
+        routine.exercises.flatMap(\.sets)
+    }
+
+    private var totalVolume: Double {
+        allSets.reduce(0) { $0 + ($1.weight ?? 0) * Double($1.reps) }
+    }
+
+    private var totalSets: Int { allSets.count }
+
+    private var totalReps: Int { allSets.reduce(0) { $0 + $1.reps } }
 
     private var card: SummaryCardView {
         SummaryCardView(
             routineName: routine.name,
             date: date,
-            totalVolume: session.totalVolume,
-            totalSets: session.totalSets,
-            totalReps: session.totalReps,
+            totalVolume: totalVolume,
+            totalSets: totalSets,
+            totalReps: totalReps,
             exerciseCount: loggedExercises.count
         )
     }
@@ -44,9 +55,9 @@ struct EndWorkoutFlowView: View {
         SummaryCardView(
             routineName: routine.name,
             date: date,
-            totalVolume: session.totalVolume,
-            totalSets: session.totalSets,
-            totalReps: session.totalReps,
+            totalVolume: totalVolume,
+            totalSets: totalSets,
+            totalReps: totalReps,
             exerciseCount: loggedExercises.count,
             cornerRadius: 0
         )
@@ -115,7 +126,7 @@ struct EndWorkoutFlowView: View {
                 .font(.system(size: 15))
                 .foregroundStyle(Theme.secondary)
             HStack(spacing: 8) {
-                ForEach(session.sets(for: exercise.id)) { set in
+                ForEach(exercise.orderedSets) { set in
                     Text(chipText(for: exercise.type, weight: set.weight, reps: set.reps))
                         .font(.system(size: 14, design: .monospaced))
                         .foregroundStyle(Theme.secondary)

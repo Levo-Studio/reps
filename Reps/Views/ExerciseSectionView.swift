@@ -11,14 +11,13 @@ import SwiftData
 
 struct ExerciseSectionView: View {
     @Bindable var exercise: Exercise
-    @Environment(WorkoutSession.self) private var session
     @Environment(RestTimerController.self) private var timer
     @Environment(\.modelContext) private var context
     let routineName: String
 
     @FocusState private var nameFocused: Bool
 
-    private var sets: [LoggedSet] { session.sets(for: exercise.id) }
+    private var sets: [SetEntry] { exercise.orderedSets }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -33,18 +32,19 @@ struct ExerciseSectionView: View {
                     reps: set.reps,
                     isDone: set.isDone,
                     onEdit: { weight, reps in
-                        // Editing an existing set saves live — it never touches
-                        // the rest timer (only marking a set done does).
-                        session.update(set, weight: weight, reps: reps)
+                        // Editing an existing set saves live to the routine — it
+                        // never touches the rest timer (only marking done does).
+                        set.weight = weight
+                        set.reps = reps
                         exercise.recordIfBest(weight: weight, reps: reps)
                         try? context.save()
                     },
                     onToggleDone: {
                         // Marking a set done starts the rest for the next set;
                         // un-marking it stops the running rest.
-                        let nowDone = !set.isDone
-                        session.setDone(set, nowDone)
-                        if nowDone {
+                        set.isDone.toggle()
+                        try? context.save()
+                        if set.isDone {
                             timer.start(
                                 routineName: routineName,
                                 nextExercise: exercise.name,
@@ -122,7 +122,9 @@ struct ExerciseSectionView: View {
         let weight = exercise.type == .weightAndReps ? (last?.weight ?? exercise.bestWeight) : nil
         let reps = last?.reps ?? (exercise.bestReps > 0 ? exercise.bestReps : 10)
 
-        session.addSet(exerciseId: exercise.id, weight: weight, reps: reps)
+        let entry = SetEntry(weight: weight, reps: reps, order: exercise.nextSetOrder)
+        entry.exercise = exercise
+        exercise.sets.append(entry)
         exercise.recordIfBest(weight: weight, reps: reps)
         try? context.save()
     }

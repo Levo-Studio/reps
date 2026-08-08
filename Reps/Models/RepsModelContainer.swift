@@ -10,7 +10,7 @@ import SwiftData
 enum RepsModelContainer {
     static let shared: ModelContainer = {
         do {
-            return try ModelContainer(for: Routine.self, Exercise.self)
+            return try ModelContainer(for: Routine.self, Exercise.self, SetEntry.self)
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }

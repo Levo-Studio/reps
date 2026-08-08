@@ -35,9 +35,22 @@ final class Exercise {
 
     var routine: Routine?
 
+    @Relationship(deleteRule: .cascade, inverse: \SetEntry.exercise)
+    var sets: [SetEntry]
+
     var type: ExerciseType {
         get { ExerciseType(rawValue: typeRaw) ?? .weightAndReps }
         set { typeRaw = newValue.rawValue }
+    }
+
+    /// Logged sets in their display order.
+    var orderedSets: [SetEntry] {
+        sets.sorted { $0.order < $1.order }
+    }
+
+    /// The next order index to assign when appending a set.
+    var nextSetOrder: Int {
+        (sets.map(\.order).max() ?? -1) + 1
     }
 
     init(
@@ -54,6 +67,7 @@ final class Exercise {
         self.sortIndex = sortIndex
         self.bestWeight = bestWeight
         self.bestReps = bestReps
+        self.sets = []
     }
 
     /// Updates the persisted baseline if the given set beats the current best.
