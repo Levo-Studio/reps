@@ -54,7 +54,7 @@ struct SummaryCardView: View {
             .font(.system(size: 13))
             .padding(.top, 12)
 
-            Spacer(minLength: 40)
+            Spacer(minLength: 0)
 
             HStack {
                 Text("Reps")
@@ -66,8 +66,8 @@ struct SummaryCardView: View {
                     .foregroundStyle(Theme.secondary)
             }
         }
-        .padding(24)
-        .frame(width: 340, height: 300, alignment: .topLeading)
+        .padding(28)
+        .frame(width: 358, height: 358, alignment: .topLeading)
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 20))
     }
 
@@ -79,6 +79,8 @@ struct SummaryCardView: View {
             Text(caption)
                 .font(.system(size: 11))
                 .foregroundStyle(Theme.secondary)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

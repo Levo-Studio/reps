@@ -156,6 +156,7 @@ struct EndWorkoutFlowView: View {
 
             Spacer()
             card
+            Spacer()
 
             VStack(spacing: 16) {
                 Text("Saved to Gallery!")
@@ -165,7 +166,6 @@ struct EndWorkoutFlowView: View {
                     .font(.system(size: 22, weight: .regular))
                     .foregroundStyle(Theme.accent)
             }
-            .padding(.top, 40)
 
             Spacer()
 
