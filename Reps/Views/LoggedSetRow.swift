@@ -3,9 +3,10 @@
 //  Reps
 //
 //  A logged set, always editable inline. Weight and reps are `TextField`s that
-//  look identical to plain display text — there is no edit "mode", no row-level
-//  tap, no background change. Tapping directly on a number focuses just that
-//  field, and edits save live via `onEdit` as the user types.
+//  look identical to plain display text — there is no edit "mode". Tapping
+//  directly on a number focuses just that field, and edits save live via
+//  `onEdit` as the user types. Tapping the rest of the row toggles the set
+//  "done" via `onToggleDone`, which highlights the row and drives the timer.
 //
 
 import SwiftUI
@@ -15,8 +16,12 @@ struct LoggedSetRow: View {
     let type: ExerciseType
     let weight: Double?
     let reps: Int
+    /// Whether the set is marked done — drives the row highlight.
+    let isDone: Bool
     /// Called live on every valid keystroke so the parent persists the edit.
     let onEdit: (_ weight: Double?, _ reps: Int) -> Void
+    /// Called when the user taps the row (outside the number fields) to toggle done.
+    let onToggleDone: () -> Void
 
     @State private var weightText: String
     @State private var repsText: String
@@ -29,26 +34,44 @@ struct LoggedSetRow: View {
         type: ExerciseType,
         weight: Double?,
         reps: Int,
-        onEdit: @escaping (_ weight: Double?, _ reps: Int) -> Void
+        isDone: Bool,
+        onEdit: @escaping (_ weight: Double?, _ reps: Int) -> Void,
+        onToggleDone: @escaping () -> Void
     ) {
         self.number = number
         self.type = type
         self.weight = weight
         self.reps = reps
+        self.isDone = isDone
         self.onEdit = onEdit
+        self.onToggleDone = onToggleDone
         _weightText = State(initialValue: weight.map(Format.weight) ?? "")
         _repsText = State(initialValue: reps > 0 ? String(reps) : "")
     }
 
     var body: some View {
         HStack(spacing: 0) {
-            Text("\(number)")
-                .foregroundStyle(Theme.secondary)
-                .font(.system(size: 17, design: .monospaced))
-            Spacer(minLength: 12)
+            // Leading zone: the set number plus the gap to the values is its own
+            // tap target that toggles done, kept separate from the trailing
+            // number fields so those keep their own taps for editing.
+            HStack(spacing: 0) {
+                Text("\(number)")
+                    .foregroundStyle(isDone ? Theme.accent : Theme.secondary)
+                    .font(.system(size: 17, design: .monospaced))
+                Spacer(minLength: 12)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture { onToggleDone() }
+
             value
         }
+        .padding(.horizontal, 12)
         .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(isDone ? Theme.accentTint : Color.clear)
+        )
+        .padding(.horizontal, -12)
         .onChange(of: weightText) { _, _ in commit() }
         .onChange(of: repsText) { _, _ in commit() }
     }

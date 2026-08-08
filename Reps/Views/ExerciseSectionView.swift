@@ -31,12 +31,28 @@ struct ExerciseSectionView: View {
                     type: exercise.type,
                     weight: set.weight,
                     reps: set.reps,
+                    isDone: set.isDone,
                     onEdit: { weight, reps in
-                        // Editing an existing set saves live — it never starts
-                        // the rest timer (only adding a new set does).
+                        // Editing an existing set saves live — it never touches
+                        // the rest timer (only marking a set done does).
                         session.update(set, weight: weight, reps: reps)
                         exercise.recordIfBest(weight: weight, reps: reps)
                         try? context.save()
+                    },
+                    onToggleDone: {
+                        // Marking a set done starts the rest for the next set;
+                        // un-marking it stops the running rest.
+                        let nowDone = !set.isDone
+                        session.setDone(set, nowDone)
+                        if nowDone {
+                            timer.start(
+                                routineName: routineName,
+                                nextExercise: exercise.name,
+                                nextSetNumber: index + 2
+                            )
+                        } else {
+                            timer.stop()
+                        }
                     }
                 )
                 rowDivider
@@ -98,9 +114,9 @@ struct ExerciseSectionView: View {
         try? context.save()
     }
 
-    /// Appends a new set — this deliberate tap is what starts the rest timer.
-    /// The set is pre-filled from the previous set (or the exercise's baseline)
-    /// and is then freely editable inline.
+    /// Appends a new set — it only adds the row, never the rest timer (marking
+    /// a set done is what starts the rest). The set is pre-filled from the
+    /// previous set (or the exercise's baseline) and is then freely editable.
     private func addSet() {
         let last = sets.last
         let weight = exercise.type == .weightAndReps ? (last?.weight ?? exercise.bestWeight) : nil
@@ -109,11 +125,5 @@ struct ExerciseSectionView: View {
         session.addSet(exerciseId: exercise.id, weight: weight, reps: reps)
         exercise.recordIfBest(weight: weight, reps: reps)
         try? context.save()
-
-        timer.start(
-            routineName: routineName,
-            nextExercise: exercise.name,
-            nextSetNumber: session.sets(for: exercise.id).count + 1
-        )
     }
 }

@@ -14,6 +14,9 @@ struct LoggedSet: Identifiable, Equatable {
     var weight: Double?
     var reps: Int
     var order: Int
+    /// Whether the user has marked this set complete. In-memory only, never
+    /// persisted — it drives the row highlight and the rest timer.
+    var isDone: Bool = false
 }
 
 /// Holds all sets logged since the routine was opened. Lives for exactly one
@@ -45,6 +48,14 @@ final class WorkoutSession {
               let index = sets.firstIndex(where: { $0.id == set.id }) else { return }
         sets[index].weight = weight
         sets[index].reps = reps
+        setsByExercise[set.exerciseId] = sets
+    }
+
+    /// Marks an existing logged set done/undone in place.
+    func setDone(_ set: LoggedSet, _ done: Bool) {
+        guard var sets = setsByExercise[set.exerciseId],
+              let index = sets.firstIndex(where: { $0.id == set.id }) else { return }
+        sets[index].isDone = done
         setsByExercise[set.exerciseId] = sets
     }
 
