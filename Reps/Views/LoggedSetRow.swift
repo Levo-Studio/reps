@@ -71,18 +71,20 @@ struct LoggedSetRow: View {
     }
 
     var body: some View {
-        ZStack(alignment: .trailing) {
-            deletePanel
-            rowContent
-                .background(isDone ? Color.white.opacity(0.008) : Color.clear)
-                // Opaque base so the red panel behind only shows once the row
-                // has actually slid out of the way.
-                .background(Theme.background)
-                .offset(x: offset)
-                .gesture(swipe)
-        }
-        .onChange(of: weightText) { _, _ in commit() }
-        .onChange(of: repsText) { _, _ in commit() }
+        rowContent
+            .background(isDone ? Color.white.opacity(0.008) : Color.clear)
+            // Opaque base so the red panel behind only shows once the row has
+            // actually slid out of the way.
+            .background(Theme.background)
+            .offset(x: offset)
+            // The delete panel is a BACKGROUND (not a ZStack sibling) so it is
+            // sized to the row and can never change its height, and — applied
+            // after `.offset`, which is render-only — it stays put while the row
+            // content slides over it.
+            .background(alignment: .trailing) { deletePanel }
+            .gesture(swipe)
+            .onChange(of: weightText) { _, _ in commit() }
+            .onChange(of: repsText) { _, _ in commit() }
     }
 
     private var rowContent: some View {
@@ -106,23 +108,20 @@ struct LoggedSetRow: View {
 
     // MARK: - Swipe to delete
 
-    /// The red affordance revealed behind the row. Its width tracks the swipe
-    /// so it reads as a panel sliding in; tapping it deletes the set.
+    /// The red affordance behind the row. As a `.background` it fills the row's
+    /// bounds; the row's own opaque background covers it until the row slides
+    /// left, revealing the trailing trash icon. Tapping the revealed area deletes.
     private var deletePanel: some View {
-        HStack(spacing: 0) {
-            Spacer(minLength: 0)
-            ZStack {
+        Button(action: onDelete) {
+            ZStack(alignment: .trailing) {
                 Color.red
-                Label("Delete", systemImage: "trash")
-                    .font(.system(size: 15, weight: .semibold))
+                Image(systemName: "trash")
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.white)
-                    .fixedSize()
+                    .padding(.trailing, 26)
             }
-            .frame(width: max(-offset, 0))
-            .clipped()
-            .contentShape(Rectangle())
-            .onTapGesture { onDelete() }
         }
+        .buttonStyle(.plain)
     }
 
     private var swipe: some Gesture {
