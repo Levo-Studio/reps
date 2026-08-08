@@ -70,6 +70,9 @@ struct RepsQuickWidget: Widget {
         }
         .configurationDisplayName("Reps")
         .description("Open Reps.")
-        .supportedFamilies([.systemSmall])
+        // Support the common home-screen families. Xcode's widget preview run
+        // action requests systemMedium by default, so it must be included or the
+        // debugger logs "Failed to show Widget".
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
