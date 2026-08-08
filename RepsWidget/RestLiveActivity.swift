@@ -62,17 +62,17 @@ private struct LogoMark: View {
 private struct CountdownText: View {
     let endDate: Date
     var font: Font = .system(size: 34, weight: .semibold, design: .rounded)
-    var minWidth: CGFloat = 64
 
     var body: some View {
+        // `fixedSize` makes the text exactly its content width (monospaced
+        // digits keep it from jittering), so the Dynamic Island pill hugs it
+        // instead of reserving extra width.
         Text(timerInterval: Date.now...endDate, countsDown: true)
             .font(font)
             .monospacedDigit()
             .foregroundStyle(RepsTheme.accent)
-            .multilineTextAlignment(.trailing)
             .lineLimit(1)
-            .minimumScaleFactor(0.5)
-            .frame(minWidth: minWidth, alignment: .trailing)
+            .fixedSize()
     }
 }
 
@@ -104,8 +104,7 @@ struct RestLiveActivity: Widget {
                             .foregroundStyle(RepsTheme.accent)
                         CountdownText(
                             endDate: context.state.endDate,
-                            font: .system(size: 22, weight: .semibold, design: .rounded),
-                            minWidth: 52
+                            font: .system(size: 22, weight: .semibold, design: .rounded)
                         )
                     }
                 }
@@ -123,20 +122,16 @@ struct RestLiveActivity: Widget {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             } compactLeading: {
-                LogoMark(side: 16)
+                LogoMark(side: 15)
             } compactTrailing: {
-                // No forced min width and a smaller font so the pill hugs the
-                // content instead of stretching wide.
                 CountdownText(
                     endDate: context.state.endDate,
-                    font: .system(size: 13, weight: .semibold, design: .rounded),
-                    minWidth: 0
+                    font: .system(size: 13, weight: .semibold, design: .rounded)
                 )
             } minimal: {
                 CountdownText(
                     endDate: context.state.endDate,
-                    font: .system(size: 12, weight: .semibold, design: .rounded),
-                    minWidth: 0
+                    font: .system(size: 12, weight: .semibold, design: .rounded)
                 )
             }
             .keylineTint(RepsTheme.accent)
