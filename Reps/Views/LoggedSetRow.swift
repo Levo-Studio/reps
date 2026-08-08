@@ -69,7 +69,7 @@ struct LoggedSetRow: View {
         // Done state: a very subtle fill, squared off and matching the row width
         // so the dividers above and below stay visible. No accent, no corner
         // radius — barely-there contrast that just reads as complete.
-        .background(isDone ? Color.white.opacity(0.015) : Color.clear)
+        .background(isDone ? Color.white.opacity(0.008) : Color.clear)
         .onChange(of: weightText) { _, _ in commit() }
         .onChange(of: repsText) { _, _ in commit() }
     }
