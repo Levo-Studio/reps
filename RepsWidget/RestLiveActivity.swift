@@ -120,15 +120,20 @@ struct RestLiveActivity: Widget {
             } compactLeading: {
                 LogoMark(side: 15)
             } compactTrailing: {
+                // `Text(timerInterval:)` is greedy and fills the trailing width,
+                // which stretched the pill wide. Cap it so the time hugs the
+                // camera and the pill stays narrow, like a normal timer.
+                CountdownText(
+                    endDate: context.state.endDate,
+                    font: .system(size: 15, weight: .semibold, design: .rounded)
+                )
+                .frame(maxWidth: 44)
+            } minimal: {
                 CountdownText(
                     endDate: context.state.endDate,
                     font: .system(size: 13, weight: .semibold, design: .rounded)
                 )
-            } minimal: {
-                CountdownText(
-                    endDate: context.state.endDate,
-                    font: .system(size: 12, weight: .semibold, design: .rounded)
-                )
+                .frame(maxWidth: 40)
             }
             .keylineTint(RepsTheme.accent)
         }
