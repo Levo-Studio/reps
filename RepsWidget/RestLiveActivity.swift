@@ -36,7 +36,9 @@ private extension Color {
 
 // MARK: - Shared subviews
 
-/// The real app icon: the dark rounded square with the accent mark.
+/// The app icon mark: the dark rounded square with the accent diagonal bar.
+/// Drawn directly (rather than loaded from an asset) so it renders reliably in
+/// the Live Activity, which tints asset images.
 private struct LogoMark: View {
     var side: CGFloat = 20
 
@@ -45,10 +47,10 @@ private struct LogoMark: View {
             .fill(RepsTheme.background)
             .frame(width: side, height: side)
             .overlay(
-                Image("RepsMark")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .padding(side * 0.24)
+                Capsule()
+                    .fill(RepsTheme.accent)
+                    .frame(width: side * 0.24, height: side * 0.6)
+                    .rotationEffect(.degrees(20))
             )
     }
 }
