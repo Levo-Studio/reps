@@ -25,6 +25,26 @@ struct ExerciseSectionView: View {
 
     private var sets: [SetEntry] { exercise.orderedSets }
 
+    /// The catalog entry whose name begins with the drafted name, if any —
+    /// powers the inline ghost-text completion while renaming.
+    private var suggestion: CatalogEntry? {
+        ExerciseCatalog.firstMatch(for: draftName)
+    }
+
+    /// The un-typed remainder of the suggestion, shown as dimmed ghost text.
+    private var ghostSuffix: String {
+        guard let suggestion, !draftName.isEmpty,
+              suggestion.name.count > draftName.count else { return "" }
+        return String(suggestion.name.dropFirst(draftName.count))
+    }
+
+    /// The type badge reflects what the rename would resolve to right now.
+    private var resolvedType: ExerciseType? {
+        let trimmed = draftName.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return nil }
+        return suggestion?.type ?? ExerciseCatalog.type(for: trimmed)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
@@ -73,25 +93,36 @@ struct ExerciseSectionView: View {
 
     /// The exercise name shows as plain text and only becomes editable on a
     /// double tap — a single tap does nothing, so the field can't be focused by
-    /// accident. Editing commits on submit and on blur.
+    /// accident. In edit mode it becomes a ghost-text autocomplete (mirroring the
+    /// Add Exercise row): the first return accepts the suggestion, the second
+    /// commits, and committing auto-switches the exercise type to match. Editing
+    /// commits on submit and on blur.
     private var header: some View {
         Group {
             if isEditingName {
-                TextField("", text: $draftName)
-                    .font(.system(size: 17, weight: .bold))
-                    .foregroundStyle(Theme.primary)
-                    .tint(Theme.accent)
-                    .focused($nameFocused)
-                    .submitLabel(.done)
-                    .onSubmit { commitNameEdit() }
-                    // Focus after the field is mounted to dodge the SwiftUI race
-                    // where focusing during the Text→TextField swap is dropped.
-                    .onAppear {
-                        DispatchQueue.main.async { nameFocused = true }
+                VStack(alignment: .leading, spacing: 0) {
+                    nameInputField
+
+                    HStack {
+                        Text("Double-tap return to accept")
+                            .foregroundStyle(Theme.secondary)
+                        Spacer()
+                        if let resolvedType {
+                            Text(resolvedType.badge)
+                                .foregroundStyle(Theme.accent)
+                        }
                     }
-                    .onChange(of: nameFocused) { _, focused in
-                        if !focused { commitNameEdit() }
-                    }
+                    .font(.system(size: 12, design: .monospaced))
+                    .padding(.top, 8)
+                    .padding(.bottom, 8)
+
+                    Divider().overlay(Theme.divider)
+                }
+                // Focus after the field is mounted to dodge the SwiftUI race
+                // where focusing during the Text→TextField swap is dropped.
+                .onAppear {
+                    DispatchQueue.main.async { nameFocused = true }
+                }
             } else {
                 Text(exercise.name)
                     .font(.system(size: 17, weight: .bold))
@@ -103,6 +134,29 @@ struct ExerciseSectionView: View {
         .padding(.bottom, 8)
         .contextMenu {
             Button(role: .destructive) { deleteExercise() } label: { Text("Delete") }
+        }
+    }
+
+    /// The ghost-text rename input: the typed text sits in the `TextField` (white)
+    /// and the un-typed remainder of the suggestion trails after it in
+    /// `Theme.secondary`. Sized to match the plain name header, not the big Add row.
+    private var nameInputField: some View {
+        HStack(spacing: 0) {
+            TextField("", text: $draftName)
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(Theme.primary)
+                .tint(Theme.accent)
+                .focused($nameFocused)
+                .submitLabel(.next)
+                .onSubmit(handleReturn)
+                .onChange(of: nameFocused) { _, focused in
+                    if !focused { commitNameEdit() }
+                }
+                .fixedSize()
+            Text(ghostSuffix)
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(Theme.secondary)
+            Spacer(minLength: 0)
         }
     }
 
@@ -130,14 +184,29 @@ struct ExerciseSectionView: View {
         isEditingName = true
     }
 
+    /// First return accepts the ghost suggestion (keeping focus); a second return
+    /// — with nothing left to accept — commits the rename.
+    private func handleReturn() {
+        if !ghostSuffix.isEmpty, let suggestion {
+            draftName = suggestion.name
+            nameFocused = true
+        } else {
+            commitNameEdit()
+        }
+    }
+
     /// Commits (or discards) the drafted name and leaves edit mode. A blank name
-    /// is discarded so the previous name is kept. The `isEditingName` guard makes
-    /// the double fire from submit-then-blur idempotent.
+    /// is discarded so the previous name and type are kept. Otherwise the name is
+    /// updated and the type is auto-switched to the resolved catalog type — this
+    /// only rewrites `name`/`type`, never the logged sets, so their weight/reps
+    /// survive the rename (reps-only just hides the weight). The `isEditingName`
+    /// guard makes the double fire from submit-then-blur idempotent.
     private func commitNameEdit() {
         guard isEditingName else { return }
         let trimmed = draftName.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmed.isEmpty {
             exercise.name = trimmed
+            exercise.type = suggestion?.type ?? ExerciseCatalog.type(for: trimmed)
             try? context.save()
         }
         isEditingName = false
