@@ -75,7 +75,7 @@ struct SummaryCardView: View {
     private func stat(value: String, caption: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(value)
-                .font(.system(size: 22, weight: .bold))
+                .font(.system(size: 18, weight: .bold))
                 .foregroundStyle(Theme.primary)
             Text(caption)
                 .font(.system(size: 11))
