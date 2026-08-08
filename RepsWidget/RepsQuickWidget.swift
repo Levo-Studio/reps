@@ -98,19 +98,19 @@ private struct RepsQuickWidgetView: View {
 
     @ViewBuilder
     private var content: some View {
-        if family == .systemLarge {
-            HStack(alignment: .top, spacing: 20) {
+        if family == .systemMedium {
+            HStack(alignment: .top, spacing: 16) {
                 BrandingColumn()
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(width: 84, alignment: .leading)
                 routineList
-                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         } else {
             BrandingColumn()
         }
     }
 
-    /// Up to three routines, listed on the right.
+    /// Up to three routines, each a divider-separated row (like the app's list)
+    /// that deep-links into that routine when tapped.
     private var routineList: some View {
         VStack(alignment: .leading, spacing: 0) {
             if routines.isEmpty {
@@ -119,21 +119,33 @@ private struct RepsQuickWidgetView: View {
                     .foregroundStyle(Palette.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
-                ForEach(Array(routines.prefix(3).enumerated()), id: \.offset) { index, name in
-                    if index > 0 {
-                        Divider().overlay(Palette.divider)
+                ForEach(Array(routines.prefix(3).enumerated()), id: \.offset) { _, name in
+                    Link(destination: Self.routineURL(name)) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(name)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(Palette.primary)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.vertical, 10)
+                            Divider().overlay(Palette.divider)
+                        }
                     }
-                    Text(name)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Palette.primary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 12)
                 }
             }
             Spacer(minLength: 0)
         }
+    }
+
+    /// Deep link for a routine — handled by the app's `onOpenURL`. Widget links
+    /// reach the owning app without a registered URL scheme.
+    static func routineURL(_ name: String) -> URL {
+        var components = URLComponents()
+        components.scheme = "reps"
+        components.host = "routine"
+        components.queryItems = [URLQueryItem(name: "name", value: name)]
+        return components.url ?? URL(string: "reps://routine")!
     }
 }
 
@@ -147,8 +159,7 @@ struct RepsQuickWidget: Widget {
         }
         .configurationDisplayName("Reps")
         .description("Open Reps and see your routines.")
-        // Xcode's widget preview requests systemMedium; all three families are
-        // supported so the host can always render it.
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        // Small = just the mark; medium = the routine list.
+        .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

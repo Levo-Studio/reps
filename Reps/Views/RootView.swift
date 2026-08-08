@@ -38,6 +38,20 @@ struct RootView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { SharedRoutines.publish(routines.map(\.name)) }
         }
+        .onOpenURL { url in openRoutine(from: url) }
+    }
+
+    /// Opens the routine named in a `reps://routine?name=…` deep link from the
+    /// Home Screen widget.
+    private func openRoutine(from url: URL) {
+        guard url.scheme == "reps",
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let name = components.queryItems?.first(where: { $0.name == "name" })?.value,
+              let routine = routines.first(where: {
+                  $0.name.compare(name, options: .caseInsensitive) == .orderedSame
+              })
+        else { return }
+        path = [routine]
     }
 
     /// Resolves a deep-link request into a navigation push.
