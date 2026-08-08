@@ -66,10 +66,10 @@ struct LoggedSetRow: View {
             value
         }
         .padding(.vertical, 12)
-        // Done state: a subtle elevated fill, squared off and matching the row
-        // width so the dividers above and below stay visible. No accent, no
-        // corner radius — just enough contrast to read as complete.
-        .background(isDone ? Theme.surface : Color.clear)
+        // Done state: a very subtle fill, squared off and matching the row width
+        // so the dividers above and below stay visible. No accent, no corner
+        // radius — barely-there contrast that just reads as complete.
+        .background(isDone ? Color.white.opacity(0.04) : Color.clear)
         .onChange(of: weightText) { _, _ in commit() }
         .onChange(of: repsText) { _, _ in commit() }
     }

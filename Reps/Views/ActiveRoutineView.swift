@@ -30,7 +30,9 @@ struct ActiveRoutineView: View {
                         .font(.system(size: 34, weight: .bold))
                         .foregroundStyle(Theme.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 8)
+                        // More breathing room below the pinned rest bar so the
+                        // title doesn't crowd it while resting.
+                        .padding(.top, timer.isRunning ? 28 : 8)
                         .padding(.bottom, 20)
 
                     ForEach(routine.orderedExercises) { exercise in
