@@ -56,7 +56,7 @@ struct LoggedSetRow: View {
             // number fields so those keep their own taps for editing.
             HStack(spacing: 0) {
                 Text("\(number)")
-                    .foregroundStyle(isDone ? Theme.accent : Theme.secondary)
+                    .foregroundStyle(Theme.secondary)
                     .font(.system(size: 17, design: .monospaced))
                 Spacer(minLength: 12)
             }
@@ -65,13 +65,11 @@ struct LoggedSetRow: View {
 
             value
         }
-        .padding(.horizontal, 12)
         .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(isDone ? Theme.accentTint : Color.clear)
-        )
-        .padding(.horizontal, -12)
+        // Done state: a subtle elevated fill, squared off and matching the row
+        // width so the dividers above and below stay visible. No accent, no
+        // corner radius — just enough contrast to read as complete.
+        .background(isDone ? Theme.surface : Color.clear)
         .onChange(of: weightText) { _, _ in commit() }
         .onChange(of: repsText) { _, _ in commit() }
     }
