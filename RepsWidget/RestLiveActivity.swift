@@ -64,15 +64,11 @@ private struct CountdownText: View {
     var font: Font = .system(size: 34, weight: .semibold, design: .rounded)
 
     var body: some View {
-        // `fixedSize` makes the text exactly its content width (monospaced
-        // digits keep it from jittering), so the Dynamic Island pill hugs it
-        // instead of reserving extra width.
         Text(timerInterval: Date.now...endDate, countsDown: true)
             .font(font)
             .monospacedDigit()
             .foregroundStyle(RepsTheme.accent)
             .lineLimit(1)
-            .fixedSize()
     }
 }
 
