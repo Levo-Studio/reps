@@ -113,17 +113,24 @@ private struct RepsQuickWidgetView: View {
     /// Up to three routines, listed on the right.
     private var routineList: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ForEach(Array(routines.prefix(3).enumerated()), id: \.offset) { index, name in
-                if index > 0 {
-                    Divider().overlay(Palette.divider)
-                }
-                Text(name)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Palette.primary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
+            if routines.isEmpty {
+                Text("Open Reps to add routines")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Palette.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 12)
+            } else {
+                ForEach(Array(routines.prefix(3).enumerated()), id: \.offset) { index, name in
+                    if index > 0 {
+                        Divider().overlay(Palette.divider)
+                    }
+                    Text(name)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Palette.primary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 12)
+                }
             }
             Spacer(minLength: 0)
         }

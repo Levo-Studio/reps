@@ -123,18 +123,20 @@ struct RestLiveActivity: Widget {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             } compactLeading: {
-                LogoMark(side: 18)
+                LogoMark(side: 16)
             } compactTrailing: {
+                // No forced min width and a smaller font so the pill hugs the
+                // content instead of stretching wide.
                 CountdownText(
                     endDate: context.state.endDate,
-                    font: .system(size: 14, weight: .semibold, design: .rounded),
-                    minWidth: 40
+                    font: .system(size: 13, weight: .semibold, design: .rounded),
+                    minWidth: 0
                 )
             } minimal: {
                 CountdownText(
                     endDate: context.state.endDate,
-                    font: .system(size: 13, weight: .semibold, design: .rounded),
-                    minWidth: 34
+                    font: .system(size: 12, weight: .semibold, design: .rounded),
+                    minWidth: 0
                 )
             }
             .keylineTint(RepsTheme.accent)
