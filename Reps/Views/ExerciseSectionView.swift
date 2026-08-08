@@ -12,6 +12,7 @@ import SwiftData
 struct ExerciseSectionView: View {
     @Bindable var exercise: Exercise
     @Environment(RestTimerController.self) private var timer
+    @Environment(CompletionStore.self) private var completion
     @Environment(\.modelContext) private var context
     let routineName: String
 
@@ -30,7 +31,7 @@ struct ExerciseSectionView: View {
                     type: exercise.type,
                     weight: set.weight,
                     reps: set.reps,
-                    isDone: set.isDone,
+                    isDone: completion.isDone(set.id),
                     onEdit: { weight, reps in
                         // Editing an existing set saves live to the routine — it
                         // never touches the rest timer (only marking done does).
@@ -41,10 +42,10 @@ struct ExerciseSectionView: View {
                     },
                     onToggleDone: {
                         // Marking a set done starts the rest for the next set;
-                        // un-marking it stops the running rest. `isDone` is
-                        // in-memory only, so there's nothing to persist here.
-                        set.isDone.toggle()
-                        if set.isDone {
+                        // un-marking it stops the running rest. Completion is
+                        // in-memory only (CompletionStore), never persisted.
+                        let nowDone = completion.toggle(set.id)
+                        if nowDone {
                             timer.start(
                                 routineName: routineName,
                                 nextExercise: exercise.name,

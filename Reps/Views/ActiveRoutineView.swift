@@ -11,6 +11,7 @@ import SwiftData
 struct ActiveRoutineView: View {
     @Bindable var routine: Routine
     @Environment(RestTimerController.self) private var timer
+    @Environment(CompletionStore.self) private var completion
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
 
@@ -113,9 +114,7 @@ struct ActiveRoutineView: View {
     /// with zero completion next time.
     private func finishWorkout() {
         timer.stop()
-        for exercise in routine.exercises {
-            for set in exercise.sets { set.isDone = false }
-        }
+        completion.reset()
         showEndFlow = false
         dismiss()
     }
