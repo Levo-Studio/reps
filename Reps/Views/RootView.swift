@@ -18,7 +18,7 @@ struct RootView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            RoutinesOverviewView()
+            RoutinesOverviewView(path: $path)
                 .navigationDestination(for: Routine.self) { routine in
                     ActiveRoutineView(routine: routine)
                 }

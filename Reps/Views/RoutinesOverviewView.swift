@@ -11,6 +11,7 @@ import SwiftData
 struct RoutinesOverviewView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Routine.sortIndex) private var routines: [Routine]
+    @Binding var path: [Routine]
 
     @State private var isAddingRoutine = false
     @State private var newRoutineName = ""
@@ -32,9 +33,11 @@ struct RoutinesOverviewView: View {
                         .padding(.bottom, 28)
 
                     ForEach(routines) { routine in
-                        RoutineRow(routine: routine) {
-                            requestDelete(routine)
-                        }
+                        RoutineRow(
+                            routine: routine,
+                            onOpen: { path.append(routine) },
+                            onRequestDelete: { requestDelete(routine) }
+                        )
                     }
 
                     if isAddingRoutine {
@@ -149,6 +152,8 @@ struct RoutinesOverviewView: View {
 /// in a `ScrollView`/`VStack` where `.swipeActions` isn't available.
 private struct RoutineRow: View {
     let routine: Routine
+    /// Called when the row is tapped (while not swiped) to open the routine.
+    let onOpen: () -> Void
     /// Called when the user swipes far enough to delete, or taps the revealed
     /// red panel, or picks Delete from the context menu.
     let onRequestDelete: () -> Void
@@ -166,22 +171,29 @@ private struct RoutineRow: View {
     private let fullSwipeThreshold: CGFloat = 200
 
     var body: some View {
-        NavigationLink(value: routine) {
-            rowLabel
-        }
-        .buttonStyle(.plain)
-        // Opaque base so the red panel behind only shows once the row has
-        // actually slid out of the way.
-        .background(Theme.background)
-        .offset(x: offset)
-        // The delete panel is a BACKGROUND (not a ZStack sibling) so it is sized
-        // to the row and — applied after `.offset`, which is render-only — stays
-        // put while the row content slides over it.
-        .background(alignment: .trailing) { deletePanel }
-        .gesture(swipe)
-        .contextMenu {
-            Button(role: .destructive) { onRequestDelete() } label: { Text("Delete") }
-        }
+        // Not a NavigationLink: a Button/link swallows the DragGesture, so the
+        // swipe never engages. Instead navigate programmatically on tap and drive
+        // the swipe with a plain gesture — the same approach that works for sets.
+        rowLabel
+            // Opaque base so the red panel behind only shows once the row has
+            // actually slid out of the way.
+            .background(Theme.background)
+            .offset(x: offset)
+            // The delete panel is a BACKGROUND (not a ZStack sibling) so it is
+            // sized to the row and — applied after `.offset`, which is
+            // render-only — stays put while the row content slides over it.
+            .background(alignment: .trailing) { deletePanel }
+            .onTapGesture {
+                if offset != 0 {
+                    withAnimation(.snappy) { offset = 0; openOffset = 0 }
+                } else {
+                    onOpen()
+                }
+            }
+            .gesture(swipe)
+            .contextMenu {
+                Button(role: .destructive) { onRequestDelete() } label: { Text("Delete") }
+            }
     }
 
     private var rowLabel: some View {
