@@ -72,7 +72,7 @@ struct LoggedSetRow: View {
 
     var body: some View {
         rowContent
-            .background(isDone ? Color.white.opacity(0.008) : Color.clear)
+            .background(isDone ? Color.white.opacity(0.015) : Color.clear)
             // Opaque base so the red panel behind only shows once the row has
             // actually slid out of the way.
             .background(Theme.background)
