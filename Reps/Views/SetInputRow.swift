@@ -3,8 +3,9 @@
 //  Reps
 //
 //  Inline numeric entry used both to add a new set and to edit an existing
-//  one. No slider — a decimal pad for weight, a number pad for reps, matching
-//  the minimal, Notes-like language of the design.
+//  one. Visually identical to `LoggedSetRow` — editing looks like nothing
+//  changed, you just edit the numbers. There is no confirm button: the entry
+//  commits on focus loss (tap outside / keyboard dismissed).
 //
 
 import SwiftUI
@@ -18,6 +19,9 @@ struct SetInputRow: View {
 
     @State private var weightText: String
     @State private var repsText: String
+    /// Guards `onCommit`/`onCancel` against firing more than once — focus
+    /// changes and disappearance can both resolve the row.
+    @State private var finished = false
     @FocusState private var focus: Field?
 
     private enum Field { case weight, reps }
@@ -48,34 +52,30 @@ struct SetInputRow: View {
 
             HStack(spacing: 6) {
                 if type == .weightAndReps {
-                    numberField("0", text: $weightText, field: .weight, keyboard: .decimalPad, width: 64)
+                    numberField("0", text: $weightText, field: .weight, keyboard: .decimalPad, weight: .bold, color: Theme.primary)
                     unit("kg")
                     unit("×")
+                    numberField("0", text: $repsText, field: .reps, keyboard: .numberPad, weight: .regular, color: Theme.secondary)
+                } else {
+                    numberField("0", text: $repsText, field: .reps, keyboard: .numberPad, weight: .bold, color: Theme.primary)
                 }
-                numberField("0", text: $repsText, field: .reps, keyboard: .numberPad, width: 48)
-
-                Button(action: commit) {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(canCommit ? Theme.accent : Theme.secondary)
-                        .frame(width: 32, height: 32)
-                }
-                .disabled(!canCommit)
-                .padding(.leading, 6)
             }
         }
         .padding(.vertical, 12)
         .onAppear { focus = type == .weightAndReps ? .weight : .reps }
+        // Commit when focus leaves the row (tap outside / keyboard dismissed).
+        .onChange(of: focus) { _, newValue in
+            if newValue == nil { resolve() }
+        }
     }
 
-    private func numberField(_ placeholder: String, text: Binding<String>, field: Field, keyboard: UIKeyboardType, width: CGFloat) -> some View {
+    private func numberField(_ placeholder: String, text: Binding<String>, field: Field, keyboard: UIKeyboardType, weight: Font.Weight, color: Color) -> some View {
         TextField(placeholder, text: text)
             .keyboardType(keyboard)
-            .multilineTextAlignment(.trailing)
-            .font(.system(size: 17, weight: .bold, design: .monospaced))
-            .foregroundStyle(Theme.primary)
+            .fixedSize()
+            .font(.system(size: 17, weight: weight, design: .monospaced))
+            .foregroundStyle(color)
             .tint(Theme.accent)
-            .frame(width: width)
             .focused($focus, equals: field)
     }
 
@@ -99,9 +99,15 @@ struct SetInputRow: View {
         return true
     }
 
-    private func commit() {
-        guard let reps = parsedReps, reps > 0 else { return }
-        let weight = type == .weightAndReps ? parsedWeight : nil
-        onCommit(weight, reps)
+    /// Commits if the entry is valid, otherwise cancels — fired exactly once.
+    private func resolve() {
+        guard !finished else { return }
+        finished = true
+        if canCommit, let reps = parsedReps {
+            let weight = type == .weightAndReps ? parsedWeight : nil
+            onCommit(weight, reps)
+        } else {
+            onCancel()
+        }
     }
 }

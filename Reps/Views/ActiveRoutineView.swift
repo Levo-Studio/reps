@@ -19,31 +19,31 @@ struct ActiveRoutineView: View {
     @State private var showEndFlow = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Rest timer lives as a pinned bar above the list — the exercise
-            // list stays stationary while the bar animates in and out.
+        // The ScrollView must be the root view so SwiftUI renders the large
+        // `.navigationTitle`. The rest bar is pinned via `.safeAreaInset` so it
+        // stays above the list without displacing the navigation title.
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(routine.orderedExercises) { exercise in
+                    ExerciseSectionView(exercise: exercise, routineName: routine.name)
+                }
+
+                if isAddingExercise {
+                    InlineAddExerciseRow(routine: routine, onDone: { isAddingExercise = false })
+                } else {
+                    newExerciseRow
+                        .padding(.top, 8)
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 40)
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .safeAreaInset(edge: .top, spacing: 0) {
             if timer.isRunning {
                 RestingHeaderView()
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(routine.orderedExercises) { exercise in
-                        ExerciseSectionView(exercise: exercise, routineName: routine.name)
-                    }
-
-                    if isAddingExercise {
-                        InlineAddExerciseRow(routine: routine, onDone: { isAddingExercise = false })
-                    } else {
-                        newExerciseRow
-                            .padding(.top, 8)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 40)
-            }
-            .scrollDismissesKeyboard(.interactively)
         }
         .animation(.easeInOut, value: timer.isRunning)
         .background(Theme.background)

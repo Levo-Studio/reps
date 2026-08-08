@@ -9,8 +9,9 @@
 import SwiftUI
 
 /// A slim header pinned above the exercise list during rest: a "Resting" label,
-/// a tappable monospaced countdown that opens a menu to change or skip the rest,
-/// and a thin draining progress bar for the remaining time.
+/// a monospaced countdown, and a trailing xmark button to end the rest. The
+/// countdown long-presses to a menu of rest lengths; a thin draining progress
+/// bar underneath tracks the remaining time.
 struct RestingHeaderView: View {
     @Environment(RestTimerController.self) private var timer
 
@@ -32,24 +33,33 @@ struct RestingHeaderView: View {
     // MARK: - Top bar
 
     private var topBar: some View {
-        HStack {
+        HStack(spacing: 12) {
             Text("Resting")
                 .font(.system(size: 17))
                 .foregroundStyle(Theme.secondary)
-            Spacer()
-            // Tapping the countdown adjusts the rest length or skips it — the
-            // only affordance, no dedicated settings screen.
-            Menu {
-                ForEach(RestTimerController.durationOptions, id: \.self) { option in
-                    Button(Self.durationLabel(option)) { timer.restart(with: option) }
+
+            // Long-pressing the countdown adjusts the rest length — a secondary
+            // affordance kept out of the way of the primary xmark control.
+            Text(timer.remainingText)
+                .font(.system(size: 20, weight: .semibold, design: .monospaced))
+                .foregroundStyle(Theme.accent)
+                .contextMenu {
+                    ForEach(RestTimerController.durationOptions, id: \.self) { option in
+                        Button(Self.durationLabel(option)) { timer.restart(with: option) }
+                    }
                 }
-                Divider()
-                Button("Skip rest", role: .destructive) { timer.stop() }
-            } label: {
-                Text(timer.remainingText)
-                    .font(.system(size: 20, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(Theme.accent)
+
+            Spacer()
+
+            // The primary control: end/skip the rest.
+            Button(action: timer.stop) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(Theme.secondary)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
+            .accessibilityLabel("Skip rest")
         }
     }
 
