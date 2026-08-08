@@ -6,6 +6,143 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin Reps widget objects (added) */
+		E100000000000000000000A2 /* RepsWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RepsWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E100000000000000000000A3 /* RepsWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = RepsWidget;
+			sourceTree = "<group>";
+		};
+		E100000000000000000000B1 /* RepsWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E100000000000000000000A2 /* RepsWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		E100000000000000000000B2 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				E100000000000000000000B1 /* RepsWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E100000000000000000000A4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E100000000000000000000A5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E100000000000000000000A6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E100000000000000000000B4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 765594C330271EE800DB3711 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E100000000000000000000A1;
+			remoteInfo = RepsWidgetExtension;
+		};
+		E100000000000000000000B3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E100000000000000000000A1 /* RepsWidgetExtension */;
+			targetProxy = E100000000000000000000B4 /* PBXContainerItemProxy */;
+		};
+		E100000000000000000000A1 /* RepsWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E100000000000000000000A7 /* Build configuration list for PBXNativeTarget "RepsWidgetExtension" */;
+			buildPhases = (
+				E100000000000000000000A4 /* Sources */,
+				E100000000000000000000A5 /* Frameworks */,
+				E100000000000000000000A6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				E100000000000000000000A3 /* RepsWidget */,
+			);
+			name = RepsWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = RepsWidgetExtension;
+			productReference = E100000000000000000000A2 /* RepsWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		E100000000000000000000A7 /* Build configuration list for PBXNativeTarget "RepsWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E100000000000000000000A8 /* Debug */,
+				E100000000000000000000A9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E100000000000000000000A8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2X9HKUD25Y;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "RepsWidget-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = RepsWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Julius-Grimm.Reps.RepsWidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E100000000000000000000A9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2X9HKUD25Y;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "RepsWidget-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = RepsWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "Julius-Grimm.Reps.RepsWidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End Reps widget objects (added) */
+
 /* Begin PBXFileReference section */
 		765594CB30271EE800DB3711 /* Reps.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Reps.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -33,6 +170,7 @@
 			isa = PBXGroup;
 			children = (
 				765594CD30271EE800DB3711 /* Reps */,
+				E100000000000000000000A3 /* RepsWidget */,
 				765594CC30271EE800DB3711 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +179,7 @@
 			isa = PBXGroup;
 			children = (
 				765594CB30271EE800DB3711 /* Reps.app */,
+				E100000000000000000000A2 /* RepsWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -55,10 +194,12 @@
 				765594C730271EE800DB3711 /* Sources */,
 				765594C830271EE800DB3711 /* Frameworks */,
 				765594C930271EE800DB3711 /* Resources */,
+				E100000000000000000000B2 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				E100000000000000000000B3 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				765594CD30271EE800DB3711 /* Reps */,
@@ -100,6 +241,7 @@
 			projectRoot = "";
 			targets = (
 				765594CA30271EE800DB3711 /* Reps */,
+				E100000000000000000000A1 /* RepsWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
