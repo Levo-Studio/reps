@@ -15,6 +15,7 @@ import SwiftUI
 // MARK: - Design Tokens
 
 private enum RepsTheme {
+    static let background = Color(hex: 0x141416)
     static let surface = Color(hex: 0x1C1C1E)
     static let primary = Color(hex: 0xFFFFFF)
     static let secondary = Color(hex: 0x8E8E93)
@@ -35,18 +36,19 @@ private extension Color {
 
 // MARK: - Shared subviews
 
-/// The accent-green rounded square containing a bold white "R".
+/// The real app icon: the dark rounded square with the accent mark.
 private struct LogoMark: View {
     var side: CGFloat = 20
 
     var body: some View {
         RoundedRectangle(cornerRadius: side * 0.28, style: .continuous)
-            .fill(RepsTheme.accent)
+            .fill(RepsTheme.background)
             .frame(width: side, height: side)
             .overlay(
-                Text("R")
-                    .font(.system(size: side * 0.62, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color(hex: 0x000000))
+                Image("RepsMark")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .padding(side * 0.24)
             )
     }
 }
