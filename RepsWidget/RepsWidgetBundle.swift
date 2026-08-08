@@ -14,5 +14,6 @@ import SwiftUI
 struct RepsWidgetBundle: WidgetBundle {
     var body: some Widget {
         RestLiveActivity()
+        RepsQuickWidget()
     }
 }
