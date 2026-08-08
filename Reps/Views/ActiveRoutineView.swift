@@ -19,24 +19,39 @@ struct ActiveRoutineView: View {
     @State private var showEndFlow = false
 
     var body: some View {
-        // The ScrollView must be the root view so SwiftUI renders the large
-        // `.navigationTitle`. The rest bar is pinned via `.safeAreaInset` so it
-        // stays above the list without displacing the navigation title.
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(routine.orderedExercises) { exercise in
-                    ExerciseSectionView(exercise: exercise, routineName: routine.name)
-                }
-
-                if isAddingExercise {
-                    InlineAddExerciseRow(routine: routine, onDone: { isAddingExercise = false })
-                } else {
-                    newExerciseRow
+        // We render the routine name inside the scroll content rather than as the
+        // system large title: the `.safeAreaInset` rest bar collapses SwiftUI's
+        // large `.navigationTitle`, so the title would vanish while resting. The
+        // inline title below is always visible, resting or not.
+        GeometryReader { geo in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(routine.name)
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundStyle(Theme.primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 8)
+                        .padding(.bottom, 20)
+
+                    ForEach(routine.orderedExercises) { exercise in
+                        ExerciseSectionView(exercise: exercise, routineName: routine.name)
+                    }
+
+                    if isAddingExercise {
+                        InlineAddExerciseRow(routine: routine, onDone: { isAddingExercise = false })
+                    } else {
+                        newExerciseRow
+                            .padding(.top, 8)
+                    }
                 }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 40)
+                .frame(maxWidth: .infinity, minHeight: geo.size.height, alignment: .top)
+                // Tapping empty area dismisses the keyboard so blur-commit fires.
+                // Interactive children keep their own taps; only gaps land here.
+                .contentShape(Rectangle())
+                .onTapGesture { dismissKeyboard() }
             }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 40)
         }
         .scrollDismissesKeyboard(.interactively)
         .safeAreaInset(edge: .top, spacing: 0) {
@@ -47,8 +62,8 @@ struct ActiveRoutineView: View {
         }
         .animation(.easeInOut, value: timer.isRunning)
         .background(Theme.background)
-        .navigationTitle(routine.name)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -79,6 +94,13 @@ struct ActiveRoutineView: View {
                 .contentShape(Rectangle())
                 .onTapGesture { isAddingExercise = true }
         }
+    }
+
+    /// Resigns first responder so any editing field commits on blur. Scoped to
+    /// this struct on purpose — no global/extension helper, to avoid a symbol
+    /// clash with helpers other views may define.
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     /// Ends the workout: clears the session and returns to Screen 1.

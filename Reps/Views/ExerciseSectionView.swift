@@ -18,7 +18,6 @@ struct ExerciseSectionView: View {
 
     @State private var isEditingName = false
     @State private var isAddingSet = false
-    @State private var editingSetID: UUID?
     @FocusState private var nameFocused: Bool
 
     private var sets: [LoggedSet] { session.sets(for: exercise.id) }
@@ -29,29 +28,17 @@ struct ExerciseSectionView: View {
                 .padding(.bottom, 4)
 
             ForEach(Array(sets.enumerated()), id: \.element.id) { index, set in
-                if editingSetID == set.id {
-                    SetInputRow(
-                        type: exercise.type,
-                        leading: "\(index + 1)",
-                        initialWeight: set.weight,
-                        initialReps: set.reps,
-                        onCommit: { weight, reps in
-                            session.update(set, weight: weight, reps: reps)
-                            exercise.recordIfBest(weight: weight, reps: reps)
-                            try? context.save()
-                            editingSetID = nil
-                        },
-                        onCancel: { editingSetID = nil }
-                    )
-                } else {
-                    LoggedSetRow(
-                        number: index + 1,
-                        type: exercise.type,
-                        weight: set.weight,
-                        reps: set.reps,
-                        onTap: { editingSetID = set.id }
-                    )
-                }
+                LoggedSetRow(
+                    number: index + 1,
+                    type: exercise.type,
+                    weight: set.weight,
+                    reps: set.reps,
+                    onEdit: { weight, reps in
+                        session.update(set, weight: weight, reps: reps)
+                        exercise.recordIfBest(weight: weight, reps: reps)
+                        try? context.save()
+                    }
+                )
                 rowDivider
             }
 
