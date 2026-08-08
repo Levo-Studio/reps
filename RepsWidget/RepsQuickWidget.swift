@@ -121,6 +121,7 @@ private struct RepsQuickWidgetView: View {
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Palette.primary)
                     .lineLimit(1)
+                    .truncationMode(.tail)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 12)
             }

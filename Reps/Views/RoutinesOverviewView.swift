@@ -65,9 +65,6 @@ struct RoutinesOverviewView: View {
         .scrollDismissesKeyboard(.interactively)
         .background(Theme.background)
         .toolbar(.hidden, for: .navigationBar)
-        // Keep the widget's routine list in sync.
-        .onAppear { SharedRoutines.publish(routines.map(\.name)) }
-        .onChange(of: routines.map(\.name)) { _, names in SharedRoutines.publish(names) }
         .confirmationDialog(
             routinePendingDelete.map { "Delete “\($0.name)”?" } ?? "",
             isPresented: Binding(

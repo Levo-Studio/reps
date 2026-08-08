@@ -26,9 +26,13 @@ struct RootView: View {
         .task {
             timer.requestAuthorization()
             openPendingRoutine()
+            SharedRoutines.publish(routines.map(\.name))
         }
         .onChange(of: router.pendingRoutineID) { _, _ in
             openPendingRoutine()
+        }
+        .onChange(of: routines.map(\.name)) { _, names in
+            SharedRoutines.publish(names)
         }
     }
 
