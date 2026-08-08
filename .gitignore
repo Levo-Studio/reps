@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+
+# Xcode — user-specific state
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# Build output
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.swiftpm/
+.build/
+
+# iCloud placeholder files
+*.icloud
