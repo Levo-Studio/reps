@@ -17,6 +17,11 @@ struct ExerciseSectionView: View {
     let routineName: String
 
     @FocusState private var nameFocused: Bool
+    /// Whether the name header is in its double-tap edit state.
+    @State private var isEditingName = false
+    /// Working copy of the name while editing, so an empty submit can be
+    /// discarded without ever writing a blank name onto the model.
+    @State private var draftName = ""
 
     private var sets: [SetEntry] { exercise.orderedSets }
 
@@ -54,7 +59,8 @@ struct ExerciseSectionView: View {
                         } else {
                             timer.stop()
                         }
-                    }
+                    },
+                    onDelete: { deleteSet(set) }
                 )
                 rowDivider
             }
@@ -65,24 +71,39 @@ struct ExerciseSectionView: View {
 
     // MARK: - Header
 
-    /// The exercise name is an always-editable field — a single tap focuses it,
-    /// and it saves when it loses focus (like editing a Notes title).
+    /// The exercise name shows as plain text and only becomes editable on a
+    /// double tap — a single tap does nothing, so the field can't be focused by
+    /// accident. Editing commits on submit and on blur.
     private var header: some View {
-        TextField("", text: $exercise.name)
-            .font(.system(size: 17, weight: .bold))
-            .foregroundStyle(Theme.primary)
-            .tint(Theme.accent)
-            .focused($nameFocused)
-            .submitLabel(.done)
-            .onSubmit { commitNameEdit() }
-            .onChange(of: nameFocused) { _, focused in
-                if !focused { commitNameEdit() }
+        Group {
+            if isEditingName {
+                TextField("", text: $draftName)
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(Theme.primary)
+                    .tint(Theme.accent)
+                    .focused($nameFocused)
+                    .submitLabel(.done)
+                    .onSubmit { commitNameEdit() }
+                    // Focus after the field is mounted to dodge the SwiftUI race
+                    // where focusing during the Text→TextField swap is dropped.
+                    .onAppear {
+                        DispatchQueue.main.async { nameFocused = true }
+                    }
+                    .onChange(of: nameFocused) { _, focused in
+                        if !focused { commitNameEdit() }
+                    }
+            } else {
+                Text(exercise.name)
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(Theme.primary)
+                    .onTapGesture(count: 2) { beginNameEdit() }
             }
-            .padding(.top, 20)
-            .padding(.bottom, 8)
-            .contextMenu {
-                Button(role: .destructive) { deleteExercise() } label: { Text("Delete") }
-            }
+        }
+        .padding(.top, 20)
+        .padding(.bottom, 8)
+        .contextMenu {
+            Button(role: .destructive) { deleteExercise() } label: { Text("Delete") }
+        }
     }
 
     private var addSetRow: some View {
@@ -104,14 +125,33 @@ struct ExerciseSectionView: View {
 
     // MARK: - Actions
 
+    private func beginNameEdit() {
+        draftName = exercise.name
+        isEditingName = true
+    }
+
+    /// Commits (or discards) the drafted name and leaves edit mode. A blank name
+    /// is discarded so the previous name is kept. The `isEditingName` guard makes
+    /// the double fire from submit-then-blur idempotent.
     private func commitNameEdit() {
-        let trimmed = exercise.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmed.isEmpty { exercise.name = trimmed }
-        try? context.save()
+        guard isEditingName else { return }
+        let trimmed = draftName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty {
+            exercise.name = trimmed
+            try? context.save()
+        }
+        isEditingName = false
+        nameFocused = false
     }
 
     private func deleteExercise() {
         context.delete(exercise)
+        try? context.save()
+    }
+
+    private func deleteSet(_ set: SetEntry) {
+        context.delete(set)
+        exercise.sets.removeAll { $0.id == set.id }
         try? context.save()
     }
 

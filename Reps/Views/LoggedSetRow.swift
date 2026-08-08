@@ -8,6 +8,11 @@
 //  `onEdit` as the user types. Tapping the rest of the row toggles the set
 //  "done" via `onToggleDone`, which highlights the row and drives the timer.
 //
+//  The row lives in a `ScrollView`/`VStack` (not a `List`), so `.swipeActions`
+//  isn't available — a left-swipe to delete is implemented by hand with a
+//  `DragGesture` driving `offset` over a red "Delete" panel revealed at the
+//  trailing edge.
+//
 
 import SwiftUI
 
@@ -22,12 +27,26 @@ struct LoggedSetRow: View {
     let onEdit: (_ weight: Double?, _ reps: Int) -> Void
     /// Called when the user taps the row (outside the number fields) to toggle done.
     let onToggleDone: () -> Void
+    /// Called when the set is swiped away or the revealed Delete panel is tapped.
+    let onDelete: () -> Void
 
     @State private var weightText: String
     @State private var repsText: String
     @FocusState private var focus: Field?
 
+    // Swipe-to-delete state. `offset` is the live horizontal displacement of the
+    // row (negative = swiped left); `openOffset` is the resting position it
+    // settles into so a second drag continues from where it stopped.
+    @State private var offset: CGFloat = 0
+    @State private var openOffset: CGFloat = 0
+    @State private var isSwiping = false
+
     private enum Field { case weight, reps }
+
+    /// How far the row rests open when the swipe passes the small threshold.
+    private let revealWidth: CGFloat = 88
+    /// Swiping past this triggers the delete outright, without resting open.
+    private let fullSwipeThreshold: CGFloat = 200
 
     init(
         number: Int,
@@ -36,7 +55,8 @@ struct LoggedSetRow: View {
         reps: Int,
         isDone: Bool,
         onEdit: @escaping (_ weight: Double?, _ reps: Int) -> Void,
-        onToggleDone: @escaping () -> Void
+        onToggleDone: @escaping () -> Void,
+        onDelete: @escaping () -> Void
     ) {
         self.number = number
         self.type = type
@@ -45,11 +65,27 @@ struct LoggedSetRow: View {
         self.isDone = isDone
         self.onEdit = onEdit
         self.onToggleDone = onToggleDone
+        self.onDelete = onDelete
         _weightText = State(initialValue: weight.map(Format.weight) ?? "")
         _repsText = State(initialValue: reps > 0 ? String(reps) : "")
     }
 
     var body: some View {
+        ZStack(alignment: .trailing) {
+            deletePanel
+            rowContent
+                .background(isDone ? Color.white.opacity(0.008) : Color.clear)
+                // Opaque base so the red panel behind only shows once the row
+                // has actually slid out of the way.
+                .background(Theme.background)
+                .offset(x: offset)
+                .gesture(swipe)
+        }
+        .onChange(of: weightText) { _, _ in commit() }
+        .onChange(of: repsText) { _, _ in commit() }
+    }
+
+    private var rowContent: some View {
         HStack(spacing: 0) {
             // Leading zone: the set number plus the gap to the values is its own
             // tap target that toggles done, kept separate from the trailing
@@ -66,13 +102,63 @@ struct LoggedSetRow: View {
             value
         }
         .padding(.vertical, 12)
-        // Done state: a very subtle fill, squared off and matching the row width
-        // so the dividers above and below stay visible. No accent, no corner
-        // radius — barely-there contrast that just reads as complete.
-        .background(isDone ? Color.white.opacity(0.008) : Color.clear)
-        .onChange(of: weightText) { _, _ in commit() }
-        .onChange(of: repsText) { _, _ in commit() }
     }
+
+    // MARK: - Swipe to delete
+
+    /// The red affordance revealed behind the row. Its width tracks the swipe
+    /// so it reads as a panel sliding in; tapping it deletes the set.
+    private var deletePanel: some View {
+        HStack(spacing: 0) {
+            Spacer(minLength: 0)
+            ZStack {
+                Color.red
+                Label("Delete", systemImage: "trash")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .fixedSize()
+            }
+            .frame(width: max(-offset, 0))
+            .clipped()
+            .contentShape(Rectangle())
+            .onTapGesture { onDelete() }
+        }
+    }
+
+    private var swipe: some Gesture {
+        DragGesture(minimumDistance: 18)
+            .onChanged { value in
+                // Only commit to a swipe once the drag is clearly horizontal, so
+                // vertical scrolls and taps on the fields aren't hijacked.
+                if !isSwiping {
+                    guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                    isSwiping = true
+                }
+                let proposed = openOffset + value.translation.width
+                // Left-only, with a little travel past the full-swipe threshold
+                // for feedback.
+                offset = min(0, max(proposed, -(fullSwipeThreshold + 80)))
+            }
+            .onEnded { _ in
+                isSwiping = false
+                let distance = -offset
+                if distance > fullSwipeThreshold {
+                    onDelete()
+                } else if distance > revealWidth / 2 {
+                    withAnimation(.snappy) {
+                        offset = -revealWidth
+                        openOffset = -revealWidth
+                    }
+                } else {
+                    withAnimation(.snappy) {
+                        offset = 0
+                        openOffset = 0
+                    }
+                }
+            }
+    }
+
+    // MARK: - Value fields
 
     @ViewBuilder
     private var value: some View {
