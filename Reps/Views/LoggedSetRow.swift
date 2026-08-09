@@ -102,9 +102,10 @@ struct LoggedSetRow: View {
             .contentShape(Rectangle())
             .onTapGesture { onToggleDone() }
 
-            // Right half holds the editable numbers, aligned to the trailing edge.
+            // Numbers hug their content on the right, with a small buffer (~0.5rem)
+            // so tapping a number never lands on the toggle area on the left.
             value
-                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.leading, 8)
         }
         .padding(.vertical, 12)
     }
