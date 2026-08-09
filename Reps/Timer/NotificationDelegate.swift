@@ -5,8 +5,10 @@
 
 import UserNotifications
 
-/// Suppresses the banner for the rest-over notification while the app is in the
-/// foreground — only the short sound plays, no "Rest over" banner.
+/// While the app is in the foreground the rest-over sound is played through the
+/// media session by `SoundPlayer` (so it ignores the silent switch), so the
+/// notification presents nothing here — no banner and no duplicate sound. In the
+/// background the notification still delivers its sound normally.
 final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationDelegate()
 
@@ -15,6 +17,6 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        completionHandler([.sound])
+        completionHandler([])
     }
 }

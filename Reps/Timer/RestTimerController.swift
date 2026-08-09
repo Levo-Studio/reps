@@ -90,6 +90,7 @@ final class RestTimerController {
         remaining = 0
         ticker?.invalidate()
         ticker = nil
+        SoundPlayer.shared.playRestOver()
         endLiveActivity()
     }
 
