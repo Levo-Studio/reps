@@ -27,6 +27,15 @@ struct ExerciseSectionView: View {
     /// is auto-resolved from the suggestion/catalog.
     @State private var manualType: ExerciseType?
 
+    // Swipe-to-delete state for the exercise name header.
+    @State private var offset: CGFloat = 0
+    @State private var openOffset: CGFloat = 0
+    @State private var isSwiping = false
+    @State private var showDeleteConfirm = false
+
+    private let revealWidth: CGFloat = 88
+    private let fullSwipeThreshold: CGFloat = 200
+
     private var sets: [SetEntry] { exercise.orderedSets }
 
     /// User-learned exercises, mapped into catalog entries so they feed both the
@@ -106,6 +115,14 @@ struct ExerciseSectionView: View {
 
             addSetRow
         }
+        .confirmationDialog(
+            "Delete “\(exercise.name)”?",
+            isPresented: $showDeleteConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) { deleteExercise() }
+            Button("Cancel", role: .cancel) {}
+        }
     }
 
     // MARK: - Header
@@ -151,14 +168,67 @@ struct ExerciseSectionView: View {
                 Text(exercise.name)
                     .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(Theme.primary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
                     .onTapGesture(count: 2) { beginNameEdit() }
+                    .background(Theme.background)
+                    .offset(x: offset)
+                    .background(alignment: .trailing) {
+                        if offset < 0 { deletePanel }
+                    }
+                    .gesture(swipe)
             }
         }
         .padding(.top, 20)
         .padding(.bottom, 8)
         .contextMenu {
-            Button(role: .destructive) { deleteExercise() } label: { Text("Delete") }
+            Button(role: .destructive) { requestDeleteExercise() } label: { Text("Delete") }
         }
+    }
+
+    /// The red affordance revealed behind the name on a left swipe. Tapping it
+    /// asks to delete the exercise (via the confirmation dialog).
+    private var deletePanel: some View {
+        Button(action: requestDeleteExercise) {
+            ZStack(alignment: .trailing) {
+                Color.red
+                Image(systemName: "trash")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.trailing, 26)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var swipe: some Gesture {
+        DragGesture(minimumDistance: 18)
+            .onChanged { value in
+                if !isSwiping {
+                    guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                    isSwiping = true
+                }
+                let proposed = openOffset + value.translation.width
+                offset = min(0, max(proposed, -(fullSwipeThreshold + 80)))
+            }
+            .onEnded { _ in
+                isSwiping = false
+                let distance = -offset
+                if distance > fullSwipeThreshold {
+                    requestDeleteExercise()
+                } else if distance > revealWidth / 2 {
+                    withAnimation(.snappy) { offset = -revealWidth; openOffset = -revealWidth }
+                } else {
+                    withAnimation(.snappy) { offset = 0; openOffset = 0 }
+                }
+            }
+    }
+
+    /// Snaps the row closed and presents the confirmation dialog — the exercise
+    /// is only removed once the user confirms.
+    private func requestDeleteExercise() {
+        withAnimation(.snappy) { offset = 0; openOffset = 0 }
+        showDeleteConfirm = true
     }
 
     /// The ghost-text rename input: the typed text sits in the `TextField` (white)
