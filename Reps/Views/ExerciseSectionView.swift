@@ -115,6 +115,13 @@ struct ExerciseSectionView: View {
 
             addSetRow
         }
+        // The whole exercise block slides on a title swipe, revealing a single
+        // delete affordance; the per-set swipe-to-delete stays independent.
+        .background(Theme.background)
+        .offset(x: offset)
+        .background(alignment: .trailing) {
+            if offset < 0 { deletePanel }
+        }
         .confirmationDialog(
             "Delete “\(exercise.name)”?",
             isPresented: $showDeleteConfirm,
@@ -165,17 +172,14 @@ struct ExerciseSectionView: View {
                     DispatchQueue.main.async { nameFocused = true }
                 }
             } else {
+                // Swiping the title drives the whole-block swipe (offset lives on
+                // the section's VStack), so the entire exercise slides together.
                 Text(exercise.name)
                     .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(Theme.primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(Rectangle())
                     .onTapGesture(count: 2) { beginNameEdit() }
-                    .background(Theme.background)
-                    .offset(x: offset)
-                    .background(alignment: .trailing) {
-                        if offset < 0 { deletePanel }
-                    }
                     .gesture(swipe)
             }
         }
