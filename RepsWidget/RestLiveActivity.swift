@@ -87,42 +87,51 @@ struct RestLiveActivity: Widget {
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     HStack(spacing: 6) {
-                        LogoMark(side: 22)
+                        LogoMark(side: 20)
                         Text("Reps")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(RepsTheme.primary)
                     }
+                    .padding(.leading, 8)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    if context.state.endDate <= Date() {
-                        Text("Rest over")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(RepsTheme.accent)
-                    } else {
-                        CountdownText(
-                            endDate: context.state.endDate,
-                            font: .system(size: 22, weight: .semibold, design: .rounded)
-                        )
-                        .frame(maxWidth: 64, alignment: .trailing)
-                    }
+                    Text("Rest Timer")
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundStyle(RepsTheme.secondary)
+                        .padding(.trailing, 8)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(context.attributes.routineName)
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(RepsTheme.primary)
-                            .lineLimit(1)
-                        Text("Next: \(context.attributes.nextExercise) • Set \(context.attributes.nextSetNumber)")
-                            .font(.system(size: 12, weight: .regular))
-                            .foregroundStyle(RepsTheme.secondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.85)
+                    // Routine + next set on the left, the timer vertically
+                    // centered against them on the right.
+                    HStack(alignment: .center, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(context.attributes.routineName)
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundStyle(RepsTheme.primary)
+                                .lineLimit(1)
+                            Text("Next: \(context.attributes.nextExercise) • Set \(context.attributes.nextSetNumber)")
+                                .font(.system(size: 12, weight: .regular))
+                                .foregroundStyle(RepsTheme.secondary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.85)
+                        }
+
+                        Spacer(minLength: 8)
+
+                        if context.state.endDate <= Date() {
+                            Text("Rest over")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(RepsTheme.accent)
+                        } else {
+                            CountdownText(
+                                endDate: context.state.endDate,
+                                font: .system(size: 30, weight: .semibold, design: .rounded)
+                            )
+                            .frame(width: 74, alignment: .trailing)
+                        }
                     }
-                    // Indent so the text lines up under "Reps" (past the logo)
-                    // and isn't clipped/jammed against the rounded island edge.
-                    .padding(.leading, 26)
-                    .padding(.trailing, 6)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 8)
+                    .padding(.top, 2)
                 }
             } compactLeading: {
                 LogoMark(side: 15)
