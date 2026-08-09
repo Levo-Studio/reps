@@ -32,7 +32,6 @@ struct LoggedSetRow: View {
 
     @State private var weightText: String
     @State private var repsText: String
-    @FocusState private var focus: Field?
 
     // Swipe-to-delete state. `offset` is the live horizontal displacement of the
     // row (negative = swiped left); `openOffset` is the resting position it
@@ -40,8 +39,6 @@ struct LoggedSetRow: View {
     @State private var offset: CGFloat = 0
     @State private var openOffset: CGFloat = 0
     @State private var isSwiping = false
-
-    private enum Field { case weight, reps }
 
     /// How far the row rests open when the swipe passes the small threshold.
     private let revealWidth: CGFloat = 88
@@ -168,24 +165,32 @@ struct LoggedSetRow: View {
     private var value: some View {
         HStack(spacing: 6) {
             if type == .weightAndReps {
-                numberField("0", text: $weightText, field: .weight, keyboard: .decimalPad, weight: .bold, color: Theme.primary)
+                numberField(text: $weightText, keyboard: .decimalPad, bold: true, color: Theme.primary)
                 unit("kg")
                 unit("×")
-                numberField("0", text: $repsText, field: .reps, keyboard: .numberPad, weight: .regular, color: Theme.secondary)
+                numberField(text: $repsText, keyboard: .numberPad, bold: false, color: Theme.secondary)
             } else {
-                numberField("0", text: $repsText, field: .reps, keyboard: .numberPad, weight: .bold, color: Theme.primary)
+                numberField(text: $repsText, keyboard: .numberPad, bold: true, color: Theme.primary)
             }
         }
+        // A little breathing room so the numbers have a comfortable tap target,
+        // separated from the toggle-done area on the left.
+        .padding(.leading, 16)
     }
 
-    private func numberField(_ placeholder: String, text: Binding<String>, field: Field, keyboard: UIKeyboardType, weight: Font.Weight, color: Color) -> some View {
-        TextField(placeholder, text: text)
-            .keyboardType(keyboard)
-            .fixedSize()
-            .font(.system(size: 17, weight: weight, design: .monospaced))
-            .foregroundStyle(color)
-            .tint(Theme.accent)
-            .focused($focus, equals: field)
+    private func numberField(text: Binding<String>, keyboard: UIKeyboardType, bold: Bool, color: Color) -> some View {
+        NumberField(
+            text: text,
+            placeholder: "0",
+            keyboard: keyboard,
+            font: .monospacedSystemFont(ofSize: 17, weight: bold ? .bold : .regular),
+            textColor: UIColor(color),
+            placeholderColor: UIColor(Theme.secondary),
+            tint: UIColor(Theme.accent)
+        )
+        .fixedSize()
+        .frame(minWidth: 22)
+        .padding(.horizontal, 4)
     }
 
     private func unit(_ text: String) -> some View {
