@@ -66,7 +66,9 @@ struct LoggedSetRow: View {
         self.onEdit = onEdit
         self.onToggleDone = onToggleDone
         self.onDelete = onDelete
-        _weightText = State(initialValue: weight.map(Format.weight) ?? "")
+        // Show a weight only when it's a real positive value; 0/none stays an
+        // empty placeholder so you don't have to delete a "0" before typing.
+        _weightText = State(initialValue: weight.flatMap { $0 > 0 ? Format.weight($0) : nil } ?? "")
         _repsText = State(initialValue: reps > 0 ? String(reps) : "")
     }
 

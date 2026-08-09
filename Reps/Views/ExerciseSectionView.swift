@@ -272,7 +272,12 @@ struct ExerciseSectionView: View {
     /// previous set (or the exercise's baseline) and is then freely editable.
     private func addSet() {
         let last = sets.last
-        let weight = exercise.type == .weightAndReps ? (last?.weight ?? exercise.bestWeight) : nil
+        // Only pre-fill weight with a real positive value (previous set or
+        // baseline); 0/none stays nil so the field shows an empty placeholder
+        // instead of a "0" you'd have to delete.
+        let candidateWeight = last?.weight ?? exercise.bestWeight
+        let weight: Double? = (exercise.type == .weightAndReps && (candidateWeight ?? 0) > 0)
+            ? candidateWeight : nil
         // Always pre-fill reps with a concrete, positive value (copy the previous
         // set, else the baseline, else 10) so the reps field is never left empty.
         let candidateReps = last?.reps ?? (exercise.bestReps > 0 ? exercise.bestReps : 10)

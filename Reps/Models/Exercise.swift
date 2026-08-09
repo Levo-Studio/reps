@@ -79,7 +79,9 @@ final class Exercise {
         case .repsOnly:
             if reps > bestReps { bestReps = reps }
         case .weightAndReps:
-            let newWeight = weight ?? 0
+            // Only a real, positive weight counts as a baseline — otherwise
+            // bestWeight would become 0 and pre-fill the next set with "0".
+            guard let newWeight = weight, newWeight > 0 else { return }
             let currentBest = bestWeight ?? 0
             if newWeight > currentBest || (newWeight == currentBest && reps > bestReps) {
                 bestWeight = newWeight
