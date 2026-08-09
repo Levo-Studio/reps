@@ -266,6 +266,8 @@ struct ExerciseSectionView: View {
             Text("+")
             Spacer()
             Text("Add Set")
+                // Match the numbers' right margin (their fields inset 4pt).
+                .padding(.trailing, 4)
         }
         .font(.system(size: 17))
         .foregroundStyle(Theme.secondary)
