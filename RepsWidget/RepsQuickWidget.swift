@@ -13,7 +13,7 @@ import SwiftUI
 // MARK: - Shared storage
 
 private enum Shared {
-    static let appGroup = "group.levo-studio.reps"
+    static let appGroup = "group.levo-studio.reps-lift-tracker"
     static let key = "routineNames"
 
     static func routineNames() -> [String] {

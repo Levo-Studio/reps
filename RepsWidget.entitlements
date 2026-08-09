@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.levo-studio.reps</string>
+		<string>group.levo-studio.reps-lift-tracker</string>
 	</array>
 </dict>
 </plist>
