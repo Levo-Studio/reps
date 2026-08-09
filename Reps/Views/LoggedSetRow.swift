@@ -91,19 +91,20 @@ struct LoggedSetRow: View {
 
     private var rowContent: some View {
         HStack(spacing: 0) {
-            // Leading zone: the set number plus the gap to the values is its own
-            // tap target that toggles done, kept separate from the trailing
-            // number fields so those keep their own taps for editing.
+            // Left half toggles the set done; only this half reacts to a tap.
             HStack(spacing: 0) {
                 Text("\(number)")
                     .foregroundStyle(Theme.secondary)
                     .font(.system(size: 17, design: .monospaced))
-                Spacer(minLength: 12)
+                Spacer(minLength: 0)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture { onToggleDone() }
 
+            // Right half holds the editable numbers, aligned to the trailing edge.
             value
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .padding(.vertical, 12)
     }
@@ -173,9 +174,6 @@ struct LoggedSetRow: View {
                 numberField(text: $repsText, keyboard: .numberPad, bold: true, color: Theme.primary)
             }
         }
-        // A little breathing room so the numbers have a comfortable tap target,
-        // separated from the toggle-done area on the left.
-        .padding(.leading, 16)
     }
 
     private func numberField(text: Binding<String>, keyboard: UIKeyboardType, bold: Bool, color: Color) -> some View {
