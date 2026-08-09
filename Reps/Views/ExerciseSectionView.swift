@@ -273,7 +273,10 @@ struct ExerciseSectionView: View {
     private func addSet() {
         let last = sets.last
         let weight = exercise.type == .weightAndReps ? (last?.weight ?? exercise.bestWeight) : nil
-        let reps = last?.reps ?? (exercise.bestReps > 0 ? exercise.bestReps : 10)
+        // Always pre-fill reps with a concrete, positive value (copy the previous
+        // set, else the baseline, else 10) so the reps field is never left empty.
+        let candidateReps = last?.reps ?? (exercise.bestReps > 0 ? exercise.bestReps : 10)
+        let reps = candidateReps > 0 ? candidateReps : 10
 
         let entry = SetEntry(weight: weight, reps: reps, order: exercise.nextSetOrder)
         entry.exercise = exercise

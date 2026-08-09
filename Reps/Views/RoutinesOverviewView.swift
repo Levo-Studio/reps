@@ -182,7 +182,11 @@ private struct RoutineRow: View {
             // The delete panel is a BACKGROUND (not a ZStack sibling) so it is
             // sized to the row and — applied after `.offset`, which is
             // render-only — stays put while the row content slides over it.
-            .background(alignment: .trailing) { deletePanel }
+            // Only render it while actually swiping, otherwise a sub-pixel red
+            // line flickers at the row edge on tap.
+            .background(alignment: .trailing) {
+                if offset < 0 { deletePanel }
+            }
             .onTapGesture {
                 if offset != 0 {
                     withAnimation(.snappy) { offset = 0; openOffset = 0 }

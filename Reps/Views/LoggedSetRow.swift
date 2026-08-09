@@ -80,8 +80,11 @@ struct LoggedSetRow: View {
             // The delete panel is a BACKGROUND (not a ZStack sibling) so it is
             // sized to the row and can never change its height, and — applied
             // after `.offset`, which is render-only — it stays put while the row
-            // content slides over it.
-            .background(alignment: .trailing) { deletePanel }
+            // content slides over it. Only render it while actually swiping,
+            // otherwise a sub-pixel red line flickers at the row edge on tap.
+            .background(alignment: .trailing) {
+                if offset < 0 { deletePanel }
+            }
             .gesture(swipe)
             .onChange(of: weightText) { _, _ in commit() }
             .onChange(of: repsText) { _, _ in commit() }
