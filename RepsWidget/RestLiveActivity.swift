@@ -116,7 +116,11 @@ struct RestLiveActivity: Widget {
                             .font(.system(size: 12, weight: .regular))
                             .foregroundStyle(RepsTheme.secondary)
                             .lineLimit(1)
+                            .minimumScaleFactor(0.85)
                     }
+                    // Small leading inset so the text isn't clipped by the
+                    // Dynamic Island's rounded edge.
+                    .padding(.leading, 4)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             } compactLeading: {
@@ -180,15 +184,14 @@ private struct LockScreenView: View {
                         .foregroundStyle(RepsTheme.secondary)
                         .lineLimit(1)
                 }
-
-                Spacer(minLength: 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 if !isOver {
                     CountdownText(
                         endDate: context.state.endDate,
-                        font: .system(size: 30, weight: .semibold, design: .rounded)
+                        font: .system(size: 32, weight: .semibold, design: .rounded)
                     )
-                    .frame(width: 78, alignment: .trailing)
+                    .frame(width: 72, alignment: .trailing)
                 }
             }
         }
