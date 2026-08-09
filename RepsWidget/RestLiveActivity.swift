@@ -118,9 +118,10 @@ struct RestLiveActivity: Widget {
                             .lineLimit(1)
                             .minimumScaleFactor(0.85)
                     }
-                    // Small leading inset so the text isn't clipped by the
-                    // Dynamic Island's rounded edge.
-                    .padding(.leading, 4)
+                    // Indent so the text lines up under "Reps" (past the logo)
+                    // and isn't clipped/jammed against the rounded island edge.
+                    .padding(.leading, 26)
+                    .padding(.trailing, 6)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             } compactLeading: {
