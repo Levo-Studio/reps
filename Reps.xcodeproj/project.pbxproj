@@ -347,6 +347,7 @@
 				DEVELOPMENT_TEAM = 2X9HKUD25Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Reps;
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Reps saves your workout summary card to your photo library.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -382,6 +383,7 @@
 				DEVELOPMENT_TEAM = 2X9HKUD25Y;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Reps;
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Reps saves your workout summary card to your photo library.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
