@@ -206,7 +206,10 @@ struct ExerciseSectionView: View {
     }
 
     private var swipe: some Gesture {
-        DragGesture(minimumDistance: 18)
+        // Measure in the global space: the offset moves the whole block (which
+        // contains the gesture's view), and a local translation would feed back
+        // into itself and jitter.
+        DragGesture(minimumDistance: 18, coordinateSpace: .global)
             .onChanged { value in
                 if !isSwiping {
                     guard abs(value.translation.width) > abs(value.translation.height) else { return }
