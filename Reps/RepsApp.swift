@@ -18,6 +18,8 @@ struct RepsApp: App {
 
     init() {
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
+        // Auto-dismiss the keyboard after a few seconds of no typing.
+        KeyboardIdleDismisser.shared.activate()
     }
 
     var body: some Scene {
