@@ -66,6 +66,9 @@ final class RestTimerController {
         startTicker()
         scheduleNotification(at: end)
         startLiveActivity(endDate: end)
+        // Hold a silent audio session so the ticker keeps running — and the chime
+        // still fires — while the app is backgrounded.
+        SoundPlayer.shared.beginKeepAlive()
     }
 
     /// Restarts the current rest from the top (used when the duration changes).
@@ -83,6 +86,8 @@ final class RestTimerController {
         ticker = nil
         cancelNotification()
         endLiveActivity()
+        // Release the keep-alive session so music returns to full volume.
+        SoundPlayer.shared.stop()
     }
 
     private func finish() {
@@ -90,6 +95,10 @@ final class RestTimerController {
         remaining = 0
         ticker?.invalidate()
         ticker = nil
+        // We're firing the chime in-process, so drop the pending notification to
+        // avoid a double sound. If the app had been suspended instead, this line
+        // never runs and the notification remains as the fallback.
+        cancelNotification()
         SoundPlayer.shared.playRestOver()
         endLiveActivity()
     }
